@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
         JSONArray jsonArray = readJsonDataFromAssets("chart_data.json");
 
         int chartsCount = jsonArray.length();
-        //chartsCount = 1;
+        chartsCount = 1;
 
         for (int i = 0; i < chartsCount; i++) {
             try {
@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
                 JSONArray xArray = columnsJSONArray.getJSONArray(0);
                 Long[] xData = new Long[xArray.length() - 1];
                 for (int i1 = 0; i1 < xData.length; i1++) {
-                    xData[i1] = xArray.getLong(i1+1);
+                    xData[i1] = xArray.getLong(i1 + 1);
                 }
 
                 List<Integer[]> yDataList = new ArrayList<>(columnsCount - 1);
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
                     yDataList.add(yData);
                 }
 
-                chart.setData(yDataList,xData, names, colors,types);
+                chart.setData(yDataList, xData, names, colors, types);
 
             } catch (JSONException e) {
                 e.printStackTrace();
