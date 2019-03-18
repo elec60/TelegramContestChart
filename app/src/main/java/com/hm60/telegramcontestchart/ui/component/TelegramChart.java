@@ -1,11 +1,13 @@
 package com.hm60.telegramcontestchart.ui.component;
 
+import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Region;
 import android.support.annotation.Nullable;
@@ -21,8 +23,12 @@ import java.util.List;
 public class TelegramChart extends View {
 
     private float ratio = 11f;
-    private float slidingRectRatio = 0.25f;
+    private float slidingRectRatio = 0.25f;// 1/4 of progress section width
     private float slidingRectMinWith = AndroidUtilities.dp(20);
+
+    private Paint backLinesPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    private Paint circlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     private Paint[] paints;
     private Path[] paths;
@@ -54,6 +60,30 @@ public class TelegramChart extends View {
     private RectF leftHandle = new RectF();
     private RectF rightHandle = new RectF();
 
+    private ObjectAnimator circleRadiusAnimator;
+
+    private float circleRadius;
+    private PointF circlePoint = new PointF();
+    private int xAxisColor = 0xFFE1E2E4;
+    private int backgroundLinesColor = 0xFFEDEDEF;
+
+    public void setCircleRadius(float circleRadius) {
+        if (this.circleRadius == circleRadius) {
+            return;
+        }
+
+        this.circleRadius = circleRadius;
+        invalidate();
+    }
+
+    boolean isDraggingLeftHandle;
+    boolean isDraggingRightHandle;
+    boolean isDraggingSlidingRect;
+    float lastXLeft;
+    float lastXRight;
+    float lastXSlidingRect;
+
+
 
     public TelegramChart(Context context) {
         super(context);
@@ -75,10 +105,16 @@ public class TelegramChart extends View {
 
     private void init() {
         smallForegroundPaint.setStyle(Paint.Style.FILL);
-        smallForegroundPaint.setColor(0x23D3CACA);
+        smallForegroundPaint.setColor(0xA1F6F8FE);
 
         handlesPaint.setStyle(Paint.Style.FILL);
         handlesPaint.setColor(0x5ED3CACA);
+
+        circlePaint.setStyle(Paint.Style.FILL);
+        circlePaint.setColor(0x88ECECF5);
+
+        backLinesPaint.setColor(xAxisColor);
+
     }
 
     public void setData(List<Integer[]> yDataList, Long[] xData, String[] names, String[] colors, String[] types) {
@@ -97,6 +133,8 @@ public class TelegramChart extends View {
                 if (y < minValue) minValue = y;
             }
         }
+
+        minValue = 0;
 
         diff = maxValue - minValue;
 
@@ -146,15 +184,19 @@ public class TelegramChart extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-
         drawSmallSection(canvas);
 
+        drawLargeSection(canvas);
     }
+
 
     private void drawSmallSection(Canvas canvas) {
 
-        float height = getHeight() / ratio;
-        float top = getHeight() - 3 * height;
+        int paddingBottom = getPaddingBottom();
+        int paddingTop = getPaddingTop();
+
+        float height = (getHeight() - paddingBottom - paddingTop) / ratio;
+        float top = getHeight() - height - paddingBottom;
         float left = AndroidUtilities.dp(16);
         float bottom = top + height;
         float right = getWidth() - AndroidUtilities.dp(16);
@@ -230,6 +272,7 @@ public class TelegramChart extends View {
         canvas.drawRect(leftHandle, handlesPaint);
         canvas.drawRect(rightHandle, handlesPaint);
 
+        canvas.drawCircle(circlePoint.x, circlePoint.y, circleRadius, circlePaint);
 
         canvas.save();
         canvas.clipRect(slidingRect, Region.Op.DIFFERENCE);
@@ -240,117 +283,57 @@ public class TelegramChart extends View {
 
     }
 
-    //    @SuppressLint("ClickableViewAccessibility")
-    //    override fun onTouchEvent(event: MotionEvent): Boolean {
-    //        if (!isEnabled) {
-    //            return false
-    //        }
-    //
-    //        val action = event.action and MotionEvent.ACTION_MASK
-    //
-    //        when (action) {
-    //
-    //            MotionEvent.ACTION_DOWN -> {
-    //                val x = event.x
-    //                val y = event.y
-    //                val threshold = toPxF(10f)
-    //
-    //                if (RectF(x - threshold, dragHandLeft.top, x + threshold, dragHandLeft.bottom).contains(dragHandLeft)) {
-    //                    mIsDragging1 = true
-    //                    mIsDragging2 = false
-    //                    mIsDraggingTransparentSection = false
-    //                    mTouchDownX1 = x
-    //                    hotSpotPoint.x = x
-    //                    hotSpotPoint.y = y
-    //                    animateHotSpot()
-    //
-    //                    return true
-    //                }
-    //
-    //                if (RectF(
-    //                        x - threshold,
-    //                        dragHandRight.top,
-    //                        x + threshold,
-    //                        dragHandRight.bottom
-    //                    ).contains(dragHandRight)
-    //                ) {
-    //                    mIsDragging1 = false
-    //                    mIsDragging2 = true
-    //                    mIsDraggingTransparentSection = false
-    //                    mTouchDownX2 = x
-    //                    hotSpotPoint.x = x
-    //                    hotSpotPoint.y = y
-    //                    animateHotSpot()
-    //
-    //                    return true
-    //                }
-    //
-    //                if (x > dragHandLeft.right && x < dragHandRight.left &&
-    //                    y > dragHorBorderTop.bottom && y < dragHorBorderBottom.top
-    //                ) {
-    //                    mIsDragging1 = false
-    //                    mIsDragging2 = false
-    //                    mIsDraggingTransparentSection = true
-    //                    mTouchDownTransparentSection = x
-    //                    hotSpotPoint.x = x
-    //                    hotSpotPoint.y = y
-    //                    animateHotSpot()
-    //
-    //                    return true
-    //                }
-    //
-    //                return false
-    //
-    //            }
-    //
-    //            MotionEvent.ACTION_MOVE -> {
-    //                when {
-    //                    mIsDragging1 -> {
-    //                        val x = event.x
-    //                        calcHandleLeft(x - mTouchDownX1)
-    //                        invalidate()
-    //                        mTouchDownX1 = x
-    //                    }
-    //                    mIsDragging2 -> {
-    //                        val x = event.x
-    //                        calcHandleRight(x - mTouchDownX2)
-    //                        invalidate()
-    //                        mTouchDownX2 = x
-    //                    }
-    //                    mIsDraggingTransparentSection -> {
-    //                        val x = event.x
-    //
-    //                        val xDiff = x - mTouchDownTransparentSection
-    //                        if (calcHandleLeft(xDiff)) {
-    //                            calcHandleRight(xDiff, false)
-    //                            invalidate()
-    //                            mTouchDownTransparentSection = x
-    //                        }
-    //
-    //                    }
-    //                }
-    //            }
-    //
-    //            MotionEvent.ACTION_UP -> {
-    //                mIsDragging1 = false
-    //                mIsDragging2 = false
-    //                mIsDraggingTransparentSection = false
-    //                animateHotSpot(true)
-    //                invalidate()
-    //            }
-    //        }
-    //
-    //
-    //        return true
-    //    }
+
+    private void drawLargeSection(Canvas canvas) {
+        int paddingBottom = getPaddingBottom();
+        int paddingTop = getPaddingTop();
 
 
-    boolean isDraggingLeftHandle;
-    boolean isDraggingRightHandle;
-    boolean isDraggingSlidingRect;
-    float lastXLeft;
-    float lastXRight;
-    float lastXSlidingRect;
+        float smallSectionHeight = (getHeight() - paddingBottom - paddingTop) / ratio;
+        float height = getHeight() - paddingBottom - paddingTop - smallSectionHeight;
+        float top = paddingTop;
+        float bottom = top + height;
+        float left = AndroidUtilities.dp(16);
+        float right = getWidth() - AndroidUtilities.dp(16);
+        float width = right - left;
+
+        //xAxis
+        backLinesPaint.setColor(xAxisColor);
+        canvas.drawLine(left,
+                bottom - AndroidUtilities.dp(40),
+                right,
+                bottom - AndroidUtilities.dp(40),
+                backLinesPaint);
+
+
+        for (Path path : paths) {
+            path.reset();
+        }
+
+        int indexFrom = (int) ((leftHandle.left - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
+        int indexTo = (int) ((rightHandle.right - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
+
+        for (int i = 0; i < yDataListNormalized.size(); i++) {
+            Float[] yn = yDataListNormalized.get(i);
+            Path path = paths[i];
+
+            path.moveTo(left, top + (1 - yn[indexFrom]) * (height - AndroidUtilities.dp(40)));
+
+            for (int i1 = indexFrom + 1; i1 < indexTo; i1++) {
+
+                float y = top + (1 - yn[i1]) * (height - AndroidUtilities.dp(40));
+                float x = left + (float) i1 * width / (yn.length - 1);
+
+                path.lineTo(x, y);
+            }
+
+        }
+
+        for (int i = 0; i < paths.length; i++) {
+            canvas.drawPath(paths[i], paints[i]);
+        }
+
+    }
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -373,7 +356,9 @@ public class TelegramChart extends View {
                     isDraggingRightHandle = false;
                     isDraggingSlidingRect = false;
                     lastXLeft = x;
-
+                    circlePoint.x = x;
+                    circlePoint.y = y;
+                    startCircleAnimation(false);
                     return true;
                 }
 
@@ -383,37 +368,42 @@ public class TelegramChart extends View {
                     isDraggingRightHandle = true;
                     isDraggingSlidingRect = false;
                     lastXRight = x;
-
+                    circlePoint.x = x;
+                    circlePoint.y = y;
+                    startCircleAnimation(false);
                     return true;
                 }
 
-                if (slidingRect.contains(x,y)) {
+                if (slidingRect.contains(x, y)) {
                     isDraggingLeftHandle = false;
                     isDraggingRightHandle = false;
                     isDraggingSlidingRect = true;
                     lastXSlidingRect = x;
-
+                    circlePoint.x = x;
+                    circlePoint.y = y;
+                    startCircleAnimation(false);
                     return true;
                 }
                 break;
 
             case MotionEvent.ACTION_MOVE:
                 x = event.getX();
-                if (isDraggingLeftHandle){
+                y = event.getY();
+                if (isDraggingLeftHandle) {
                     calcSlidingBound(x - lastXLeft, CalcMode.LeftHandle);
                     invalidate();
                     lastXLeft = x;
                     return true;
                 }
 
-                if (isDraggingRightHandle){
+                if (isDraggingRightHandle) {
                     calcSlidingBound(x - lastXRight, CalcMode.RightHandle);
                     invalidate();
                     lastXRight = x;
                     return true;
                 }
 
-                if (isDraggingSlidingRect){
+                if (isDraggingSlidingRect) {
                     calcSlidingBound(x - lastXSlidingRect, CalcMode.Both);
                     invalidate();
                     lastXSlidingRect = x;
@@ -422,7 +412,10 @@ public class TelegramChart extends View {
 
                 break;
 
-            case MotionEvent.ACTION_UP | MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_UP:
+                if (isDraggingSlidingRect || isDraggingRightHandle || isDraggingLeftHandle) {
+                    startCircleAnimation(true);
+                }
                 isDraggingLeftHandle = false;
                 isDraggingRightHandle = false;
                 isDraggingSlidingRect = false;
@@ -438,40 +431,48 @@ public class TelegramChart extends View {
     }
 
     private void calcSlidingBound(float diffX, CalcMode mode) {
-        switch (mode){
+        switch (mode) {
             case LeftHandle:
                 slidingRect.left += diffX;
-                if (slidingRect.left < smallForegroundRect.left){
+                circlePoint.x += diffX;
+                if (slidingRect.left < smallForegroundRect.left) {
                     slidingRect.left = smallForegroundRect.left;
+                    circlePoint.x = leftHandle.centerX();
                 }
-                if (diffX > 0 && slidingRect.width() <= slidingRectMinWith){
+                if (diffX > 0 && slidingRect.width() <= slidingRectMinWith) {
                     slidingRect.left = slidingRect.right - slidingRectMinWith;
+                    circlePoint.x = leftHandle.centerX();
                 }
                 break;
             case RightHandle:
                 slidingRect.right += diffX;
-                if (slidingRect.right > smallForegroundRect.right){
+                circlePoint.x += diffX;
+                if (slidingRect.right > smallForegroundRect.right) {
                     slidingRect.right = smallForegroundRect.right;
+                    circlePoint.x = rightHandle.centerX();
                 }
 
-                if (diffX < 0 && slidingRect.width() < slidingRectMinWith){
+                if (diffX < 0 && slidingRect.width() < slidingRectMinWith) {
                     slidingRect.right = slidingRect.left + slidingRectMinWith;
+                    circlePoint.x = rightHandle.centerX();
                 }
 
                 break;
             case Both:
                 float w = slidingRect.width();
                 slidingRect.left += diffX;
-                if (slidingRect.left < smallForegroundRect.left){
+                if (slidingRect.left < smallForegroundRect.left) {
                     slidingRect.left = smallForegroundRect.left;
                     slidingRect.right = slidingRect.left + w;
                     break;
                 }
                 slidingRect.right += diffX;
-                if (slidingRect.right > smallForegroundRect.right){
+                if (slidingRect.right > smallForegroundRect.right) {
                     slidingRect.right = smallForegroundRect.right;
                     slidingRect.left = slidingRect.right - w;
+                    break;
                 }
+                circlePoint.x += diffX;
                 break;
         }
 
@@ -481,9 +482,23 @@ public class TelegramChart extends View {
         rightHandle.right = slidingRect.right;
         rightHandle.left = rightHandle.right - AndroidUtilities.dp(5);
 
+
     }
 
-    enum CalcMode{
+    private void startCircleAnimation(boolean revers) {
+        if (circleRadiusAnimator == null) {
+            circleRadiusAnimator = ObjectAnimator.ofFloat(this, "circleRadius", 0, smallForegroundRect.height() / 2 * 1.8f);
+            circleRadiusAnimator.setDuration(200);
+        }
+
+        if (revers) {
+            circleRadiusAnimator.reverse();
+        } else {
+            circleRadiusAnimator.start();
+        }
+    }
+
+    enum CalcMode {
         LeftHandle,
         RightHandle,
         Both
