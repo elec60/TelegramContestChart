@@ -460,9 +460,9 @@ public class TelegramChart extends View {
 
                 break;
             case Both:
+                float w = slidingRect.width();
                 slidingRect.left += diffX;
                 if (slidingRect.left < smallForegroundRect.left){
-                    float w = slidingRect.width();
                     slidingRect.left = smallForegroundRect.left;
                     slidingRect.right = slidingRect.left + w;
                     break;
@@ -470,6 +470,7 @@ public class TelegramChart extends View {
                 slidingRect.right += diffX;
                 if (slidingRect.right > smallForegroundRect.right){
                     slidingRect.right = smallForegroundRect.right;
+                    slidingRect.left = slidingRect.right - w;
                 }
                 break;
         }
