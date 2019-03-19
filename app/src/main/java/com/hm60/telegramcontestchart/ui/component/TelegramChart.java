@@ -339,6 +339,7 @@ public class TelegramChart extends View {
                  indexTo = (int)((rightHandle.right - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
                 break;
                 case Both:
+                    //(indexTo - indexFrom) should be constant at this point
                     float w = slidingRect.width();
                     indexFrom = (int) ((leftHandle.left - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
                     indexTo = (int) (indexFrom + w / smallForegroundRect.width() * (xData.length - 1));
