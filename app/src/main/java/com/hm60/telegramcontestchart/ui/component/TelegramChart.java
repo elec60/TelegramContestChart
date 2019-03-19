@@ -324,6 +324,8 @@ public class TelegramChart extends View {
 
         //background lines
         backLinesPaint.setColor(backgroundLinesColor);
+        backLinesPaint.setColor(0xFFDFE6EB);
+
         for (int i = 1; i <= 5; i++) {
             int y = (int) (bottom - smallSectionHeight - height / 6 * i);
 
@@ -379,12 +381,16 @@ public class TelegramChart extends View {
                     int index = indexFrom + Math.round((tooltipX - left) / width * (indexTo - indexFrom));
                     if (index == i1) {
 
-                        if (indicatorLinePath.isEmpty()) {
+                        if (i == 0) {// before first circle added, so move to starting point
                             indicatorLinePath.moveTo(x, bottom - AndroidUtilities.dp(40));
                         }
                         indicatorLinePath.lineTo(x, y);
                         Path tooltipPath = tooltipPaths[i];
                         tooltipPath.addCircle(x, y, AndroidUtilities.dp(4), Path.Direction.CW);
+
+                        if ((i == yDataListNormalized.size() - 1)) {//last circle added, so line to ending point
+                            indicatorLinePath.lineTo(x, paddingTop);
+                        }
                     }
 
                 }
@@ -393,12 +399,13 @@ public class TelegramChart extends View {
 
         }
 
-
         for (int i = 0; i < paths.length; i++) {
             canvas.drawPath(paths[i], paints[i]);
         }
 
-        canvas.drawPath(indicatorLinePath, paints[0]);
+        backLinesPaint.setColor(0xFFFF0000);
+        canvas.drawPath(indicatorLinePath, paints[1]);
+
         for (int i = 0; i < tooltipPaths.length; i++) {
             canvas.drawPath(tooltipPaths[i], indicatorCirclePaint);
             canvas.drawPath(tooltipPaths[i], paints[i]);
