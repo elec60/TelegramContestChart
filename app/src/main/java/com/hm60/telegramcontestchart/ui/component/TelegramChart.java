@@ -11,9 +11,11 @@ import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Region;
 import android.support.annotation.Nullable;
+import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import com.hm60.telegramcontestchart.AndroidUtilities;
 
@@ -23,7 +25,7 @@ import java.util.List;
 public class TelegramChart extends View {
 
     private float ratio = 11f;
-    private float slidingRectRatio = 0.25f;// 1/4 of progress section width
+    private float slidingRectRatio = 0.33f;// 0.33 of progress section width
     private float slidingRectMinWith = AndroidUtilities.dp(20);
 
     private Paint backLinesPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -34,6 +36,7 @@ public class TelegramChart extends View {
     private Path[] paths;
     private Paint[] paintsSmall;
     private Path[] pathsSmall;
+    private TextPaint textPaint = new TextPaint();
 
 
     private List<Integer[]> yDataListOriginal;
@@ -114,6 +117,8 @@ public class TelegramChart extends View {
         circlePaint.setColor(0x88ECECF5);
 
         backLinesPaint.setColor(xAxisColor);
+
+        textPaint.setColor(0xFF84919A);
 
     }
 
@@ -305,13 +310,43 @@ public class TelegramChart extends View {
                 bottom - AndroidUtilities.dp(40),
                 backLinesPaint);
 
+        //background lines
+        backLinesPaint.setColor(backgroundLinesColor);
+        for (int i = 1; i <= 5; i++) {
+            int y = (int) (bottom - smallSectionHeight - height / 6 * i);
 
+            canvas.drawLine(left,
+                    y,
+                    right,
+                    y,
+                    backLinesPaint);
+        }
+
+
+        tooltipPath.reset();
         for (Path path : paths) {
             path.reset();
         }
 
-        int indexFrom = (int) ((leftHandle.left - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
-        int indexTo = (int) ((rightHandle.right - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
+        int indexFrom = 0;
+        int indexTo = 0;
+
+        switch (dragMode){
+
+            case LeftHandle:
+            case RightHandle:
+                 indexFrom = (int) ((leftHandle.left - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
+                 indexTo = (int)((rightHandle.right - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
+                break;
+                case Both:
+                    float w = slidingRect.width();
+                    indexFrom = (int) ((leftHandle.left - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
+                    indexTo = (int) (indexFrom + w / smallForegroundRect.width() * (xData.length - 1));
+                break;
+        }
+
+
+        Toast.makeText(getContext(), "" + (indexTo - indexFrom), Toast.LENGTH_SHORT).show();
 
         for (int i = 0; i < yDataListNormalized.size(); i++) {
             Float[] yn = yDataListNormalized.get(i);
@@ -322,19 +357,32 @@ public class TelegramChart extends View {
             for (int i1 = indexFrom + 1; i1 < indexTo; i1++) {
 
                 float y = top + (1 - yn[i1]) * (height - AndroidUtilities.dp(40));
-                float x = left + (float) i1 * width / (yn.length - 1);
+                float x = left + (float) (i1 - indexFrom) * width / (indexTo - indexFrom - 1);
 
                 path.lineTo(x, y);
+
+                if (showTooltip && Math.floor(tooltipX - x) == Math.floor(width / (indexTo - indexFrom - 1))) {
+                    tooltipPath.addCircle(x, y, AndroidUtilities.dp(4), Path.Direction.CW);
+                    //Toast.makeText(getContext(), xData[i1].toString(), Toast.LENGTH_SHORT).show();
+                }
+
             }
 
         }
+
+
 
         for (int i = 0; i < paths.length; i++) {
             canvas.drawPath(paths[i], paints[i]);
         }
 
+        canvas.drawPath(tooltipPath, paints[0]);
+
     }
 
+    boolean showTooltip;
+    float tooltipX;
+    Path tooltipPath = new Path();
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -384,31 +432,44 @@ public class TelegramChart extends View {
                     startCircleAnimation(false);
                     return true;
                 }
+
+                showTooltip = true;
+                tooltipX = x;
+                invalidate();
+
                 break;
 
             case MotionEvent.ACTION_MOVE:
                 x = event.getX();
                 y = event.getY();
                 if (isDraggingLeftHandle) {
-                    calcSlidingBound(x - lastXLeft, CalcMode.LeftHandle);
+                    dragMode = DragMode.LeftHandle;
+                    calcSlidingBound(x - lastXLeft);
                     invalidate();
                     lastXLeft = x;
                     return true;
                 }
 
                 if (isDraggingRightHandle) {
-                    calcSlidingBound(x - lastXRight, CalcMode.RightHandle);
+                    dragMode = DragMode.RightHandle;
+                    calcSlidingBound(x - lastXRight);
                     invalidate();
                     lastXRight = x;
                     return true;
                 }
 
                 if (isDraggingSlidingRect) {
-                    calcSlidingBound(x - lastXSlidingRect, CalcMode.Both);
+                    dragMode = DragMode.Both;
+
+                    calcSlidingBound(x - lastXSlidingRect);
                     invalidate();
                     lastXSlidingRect = x;
                     return true;
                 }
+
+                showTooltip = true;
+                tooltipX = x;
+                invalidate();
 
                 break;
 
@@ -430,8 +491,8 @@ public class TelegramChart extends View {
         return true;
     }
 
-    private void calcSlidingBound(float diffX, CalcMode mode) {
-        switch (mode) {
+    private void calcSlidingBound(float diffX) {
+        switch (dragMode) {
             case LeftHandle:
                 slidingRect.left += diffX;
                 circlePoint.x += diffX;
@@ -498,7 +559,9 @@ public class TelegramChart extends View {
         }
     }
 
-    enum CalcMode {
+    private DragMode dragMode = DragMode.Both;
+
+    enum DragMode {
         LeftHandle,
         RightHandle,
         Both
