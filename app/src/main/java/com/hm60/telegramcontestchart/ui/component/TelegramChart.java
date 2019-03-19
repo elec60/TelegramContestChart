@@ -346,6 +346,8 @@ public class TelegramChart extends View {
                     //(indexTo - indexFrom) should be constant at this point
                     indexFrom = (int) ((leftHandle.left - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
                     indexTo = (int) (indexFrom + 1 + slidingRect.width() / smallForegroundRect.width() * (xData.length - 1));
+
+                    Toast.makeText(getContext(), "from: " + (indexFrom) + "\nto: " + indexTo, Toast.LENGTH_SHORT).show();
                 break;
         }
 
@@ -358,13 +360,17 @@ public class TelegramChart extends View {
             for (int i1 = indexFrom + 1; i1 <= indexTo; i1++) {
 
                 float y = top + (1 - yn[i1]) * (height - AndroidUtilities.dp(40));
-                float x = left + (float) (i1 - indexFrom - 1) * width / (indexTo - indexFrom - 1);
+                float x = left + (float) (i1 - indexFrom) * width / (indexTo - indexFrom);
 
                 path.lineTo(x, y);
 
-                if (showTooltip && Math.floor(tooltipX - x) == Math.floor(width / (indexTo - indexFrom - 1))) {
-                    tooltipPath.addCircle(x, y, AndroidUtilities.dp(4), Path.Direction.CW);
-                    Toast.makeText(getContext(), "index: " + i1, Toast.LENGTH_SHORT).show();
+                if (showTooltip) {
+                    int index = indexFrom + Math.round ((tooltipX - left) / width * (indexTo - indexFrom));
+                    if (index == i1){
+                        tooltipPath.addCircle(x, y, AndroidUtilities.dp(4), Path.Direction.CW);
+                    }
+
+                    //Toast.makeText(getContext(), "index: " + index, Toast.LENGTH_SHORT).show();
                 }
 
             }
@@ -484,6 +490,7 @@ public class TelegramChart extends View {
                 lastXLeft = 0;
                 lastXRight = 0;
                 lastXSlidingRect = 0;
+                showTooltip = false;
                 invalidate();
                 break;
         }
