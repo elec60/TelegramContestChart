@@ -123,6 +123,7 @@ public class TelegramChart extends View {
         circlePaint.setColor(0x88ECECF5);
 
         backLinesPaint.setColor(xAxisColor);
+        backLinesPaint.setStyle(Paint.Style.STROKE);
 
         textPaint.setColor(0xFF84919A);
 
@@ -314,6 +315,8 @@ public class TelegramChart extends View {
         float right = getWidth() - AndroidUtilities.dp(16);
         float width = right - left;
 
+        backLinesPaint.setStrokeWidth(0);
+
         //xAxis
         backLinesPaint.setColor(xAxisColor);
         canvas.drawLine(left,
@@ -324,7 +327,6 @@ public class TelegramChart extends View {
 
         //background lines
         backLinesPaint.setColor(backgroundLinesColor);
-        backLinesPaint.setColor(0xFFDFE6EB);
 
         for (int i = 1; i <= 5; i++) {
             int y = (int) (bottom - smallSectionHeight - height / 6 * i);
@@ -403,8 +405,9 @@ public class TelegramChart extends View {
             canvas.drawPath(paths[i], paints[i]);
         }
 
-        backLinesPaint.setColor(0xFFFF0000);
-        canvas.drawPath(indicatorLinePath, paints[1]);
+        backLinesPaint.setColor(0xFFDFE6EB);
+        backLinesPaint.setStrokeWidth(AndroidUtilities.dp(1));
+        canvas.drawPath(indicatorLinePath, backLinesPaint);
 
         for (int i = 0; i < tooltipPaths.length; i++) {
             canvas.drawPath(tooltipPaths[i], indicatorCirclePaint);
