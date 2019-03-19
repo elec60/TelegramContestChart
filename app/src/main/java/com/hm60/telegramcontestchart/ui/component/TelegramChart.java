@@ -345,9 +345,6 @@ public class TelegramChart extends View {
                 break;
         }
 
-
-        Toast.makeText(getContext(), "" + (indexTo - indexFrom), Toast.LENGTH_SHORT).show();
-
         for (int i = 0; i < yDataListNormalized.size(); i++) {
             Float[] yn = yDataListNormalized.get(i);
             Path path = paths[i];
