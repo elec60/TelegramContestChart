@@ -33,6 +33,12 @@ public class TelegramChart extends View {
 
     private Paint circlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
+    boolean showTooltip;
+    float tooltipX;
+    private Path[] tooltipPaths;
+    private Paint indicatorCirclePaint = new Paint();
+    private Path indicatorLinePath = new Path();
+
     private Paint[] paints;
     private Path[] paths;
     private Paint[] paintsSmall;
@@ -55,7 +61,6 @@ public class TelegramChart extends View {
     private Paint smallForegroundPaint = new Paint();
     private Paint handlesPaint = new Paint();
 
-    private int minValue;
     private int maxValue;
     private int diff;
 
@@ -87,7 +92,6 @@ public class TelegramChart extends View {
     float lastXLeft;
     float lastXRight;
     float lastXSlidingRect;
-
 
 
     public TelegramChart(Context context) {
@@ -122,6 +126,9 @@ public class TelegramChart extends View {
 
         textPaint.setColor(0xFF84919A);
 
+        indicatorCirclePaint.setColor(0xFFFFFFFF);
+        indicatorCirclePaint.setStyle(Paint.Style.FILL);
+
     }
 
     public void setData(List<Integer[]> yDataList, Long[] xData, String[] names, String[] colors, String[] types) {
@@ -131,19 +138,15 @@ public class TelegramChart extends View {
         this.colors = colors;
         this.types = types;
 
-        minValue = Integer.MAX_VALUE;
         maxValue = Integer.MIN_VALUE;
 
         for (Integer[] ys : yDataList) {
             for (Integer y : ys) {
                 if (y > maxValue) maxValue = y;
-                if (y < minValue) minValue = y;
             }
         }
 
-        minValue = 0;
-
-        diff = maxValue - minValue;
+        diff = maxValue;
 
         paints = new Paint[yDataList.size()];
         for (int i = 0; i < paints.length; i++) {
@@ -173,11 +176,16 @@ public class TelegramChart extends View {
             pathsSmall[i] = new Path();
         }
 
+        tooltipPaths = new Path[yDataList.size()];
+        for (int i = 0; i < tooltipPaths.length; i++) {
+            tooltipPaths[i] = new Path();
+        }
+
         yDataListNormalized = new ArrayList<>(yDataList.size());
         for (Integer[] ys : yDataList) {
             Float[] yNormalized = new Float[ys.length];
             for (int i = 0; i < ys.length; i++) {
-                float f = (float) (ys[i] - minValue) / diff;
+                float f = (float) (ys[i]) / diff;
                 yNormalized[i] = f;
             }
             yDataListNormalized.add(yNormalized);
@@ -326,8 +334,12 @@ public class TelegramChart extends View {
                     backLinesPaint);
         }
 
+        indicatorLinePath.reset();
 
-        tooltipPath.reset();
+        for (Path tooltipPath : tooltipPaths) {
+            tooltipPath.reset();
+        }
+
         for (Path path : paths) {
             path.reset();
         }
@@ -335,19 +347,17 @@ public class TelegramChart extends View {
         int indexFrom = 0;
         int indexTo = 0;
 
-        switch (dragMode){
+        switch (dragMode) {
 
             case LeftHandle:
             case RightHandle:
-                 indexFrom = (int) ((leftHandle.left - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
-                 indexTo = (int)((rightHandle.right - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
+                indexFrom = (int) ((leftHandle.left - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
+                indexTo = (int) ((rightHandle.right - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
                 break;
-                case Both:
-                    //(indexTo - indexFrom) should be constant at this point
-                    indexFrom = (int) ((leftHandle.left - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
-                    indexTo = (int) (indexFrom + 1 + slidingRect.width() / smallForegroundRect.width() * (xData.length - 1));
-
-                    Toast.makeText(getContext(), "from: " + (indexFrom) + "\nto: " + indexTo, Toast.LENGTH_SHORT).show();
+            case Both:
+                //(indexTo - indexFrom) should be constant at this point
+                indexFrom = (int) ((leftHandle.left - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
+                indexTo = (int) (indexFrom + 1 + slidingRect.width() / smallForegroundRect.width() * (xData.length - 1));
                 break;
         }
 
@@ -365,12 +375,18 @@ public class TelegramChart extends View {
                 path.lineTo(x, y);
 
                 if (showTooltip) {
-                    int index = indexFrom + Math.round ((tooltipX - left) / width * (indexTo - indexFrom));
-                    if (index == i1){
+
+                    int index = indexFrom + Math.round((tooltipX - left) / width * (indexTo - indexFrom));
+                    if (index == i1) {
+
+                        if (indicatorLinePath.isEmpty()) {
+                            indicatorLinePath.moveTo(x, bottom - AndroidUtilities.dp(40));
+                        }
+                        indicatorLinePath.lineTo(x, y);
+                        Path tooltipPath = tooltipPaths[i];
                         tooltipPath.addCircle(x, y, AndroidUtilities.dp(4), Path.Direction.CW);
                     }
 
-                    //Toast.makeText(getContext(), "index: " + index, Toast.LENGTH_SHORT).show();
                 }
 
             }
@@ -378,18 +394,17 @@ public class TelegramChart extends View {
         }
 
 
-
         for (int i = 0; i < paths.length; i++) {
             canvas.drawPath(paths[i], paints[i]);
         }
 
-        canvas.drawPath(tooltipPath, paints[0]);
+        canvas.drawPath(indicatorLinePath, paints[0]);
+        for (int i = 0; i < tooltipPaths.length; i++) {
+            canvas.drawPath(tooltipPaths[i], indicatorCirclePaint);
+            canvas.drawPath(tooltipPaths[i], paints[i]);
+        }
 
     }
-
-    boolean showTooltip;
-    float tooltipX;
-    Path tooltipPath = new Path();
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
