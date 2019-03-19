@@ -29,9 +29,9 @@ public class MainActivity extends AppCompatActivity {
         JSONArray jsonArray = readJsonDataFromAssets("chart_data.json");
 
         int chartsCount = jsonArray.length();
-        chartsCount = 1;
+        chartsCount = 5;
 
-        for (int i = 0; i < chartsCount; i++) {
+        for (int i = 4; i < chartsCount; i++) {
             try {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
                 JSONArray columnsJSONArray = jsonObject.getJSONArray("columns");

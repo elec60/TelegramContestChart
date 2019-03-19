@@ -189,6 +189,8 @@ public class TelegramChart extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        canvas.drawARGB(255, 255, 255, 255);
+
         drawSmallSection(canvas);
 
         drawLargeSection(canvas);
