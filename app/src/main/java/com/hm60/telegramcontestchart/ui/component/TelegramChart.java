@@ -10,6 +10,7 @@ import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Region;
+import android.support.annotation.Keep;
 import android.support.annotation.Nullable;
 import android.text.TextPaint;
 import android.util.AttributeSet;
@@ -70,6 +71,7 @@ public class TelegramChart extends View {
     private int xAxisColor = 0xFFE1E2E4;
     private int backgroundLinesColor = 0xFFEDEDEF;
 
+    @Keep
     public void setCircleRadius(float circleRadius) {
         if (this.circleRadius == circleRadius) {
             return;
