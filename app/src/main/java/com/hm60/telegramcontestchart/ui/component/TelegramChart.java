@@ -16,9 +16,9 @@ import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 
 import com.hm60.telegramcontestchart.AndroidUtilities;
+import com.hm60.telegramcontestchart.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,6 +93,10 @@ public class TelegramChart extends View {
     float lastXRight;
     float lastXSlidingRect;
 
+    private boolean[] activeCharts;
+
+    private Label[] xLabels;
+
 
     public TelegramChart(Context context) {
         super(context);
@@ -126,6 +130,7 @@ public class TelegramChart extends View {
         backLinesPaint.setStyle(Paint.Style.STROKE);
 
         textPaint.setColor(0xFF84919A);
+        textPaint.setTextSize(AndroidUtilities.dp(10));
 
         indicatorCirclePaint.setColor(0xFFFFFFFF);
         indicatorCirclePaint.setStyle(Paint.Style.FILL);
@@ -192,6 +197,19 @@ public class TelegramChart extends View {
             yDataListNormalized.add(yNormalized);
         }
 
+        activeCharts = new boolean[yDataList.size()];
+        for (int i = 0; i < activeCharts.length; i++) {
+            activeCharts[i] = true;
+        }
+
+        //activeCharts[0] = false;
+
+        xLabels = new Label[xData.length];
+        for (int i = 0; i < xData.length; i++) {
+            Label label = new Label(0, 0, Utils.toShortDateString(xData[i]));
+            xLabels[i] = label;
+        }
+
         regenerate = true;
 
         postInvalidate();
@@ -205,6 +223,7 @@ public class TelegramChart extends View {
         drawSmallSection(canvas);
 
         drawLargeSection(canvas);
+
     }
 
 
@@ -253,9 +272,15 @@ public class TelegramChart extends View {
             }
 
             for (int i = 0; i < yDataListNormalized.size(); i++) {
+                boolean activeChart = activeCharts[i];
+                if (!activeChart) {
+                    continue;
+                }
                 Float[] yn = yDataListNormalized.get(i);
                 Path path = pathsSmall[i];
                 path.moveTo(left, top + (1 - yn[0]) * height);
+
+                //path.offset();
 
                 for (int i1 = 1; i1 < yn.length; i1++) {
 
@@ -315,6 +340,11 @@ public class TelegramChart extends View {
         float right = getWidth() - AndroidUtilities.dp(16);
         float width = right - left;
 
+
+        for (Label xLabel : xLabels) {
+            xLabel.y = bottom - AndroidUtilities.dp(25);
+        }
+
         backLinesPaint.setStrokeWidth(0);
 
         //xAxis
@@ -365,16 +395,42 @@ public class TelegramChart extends View {
                 break;
         }
 
+        //draw xAxis labels
+/*        int count = indexTo - indexFrom;
+        int step = count / 6;
+        int Y = (int) (bottom - AndroidUtilities.dp(25));
+        for (int i = 0; i < 6; i++) {
+            String dateString = Utils.toShortDateString(xData[indexTo - i * step]);
+
+            int k = indexTo - i * step - xData.length + 1;
+
+            int x = (int) (right + (k - 1) * AndroidUtilities.dp(30));
+
+            canvas.drawText(dateString, x, Y, textPaint);
+
+        }*/
+
+        for (Label xLabel : xLabels) {
+            xLabel.visible = false;
+        }
+
+
+
         for (int i = 0; i < yDataListNormalized.size(); i++) {
             Float[] yn = yDataListNormalized.get(i);
             Path path = paths[i];
 
             path.moveTo(left, top + (1 - yn[indexFrom]) * (height - AndroidUtilities.dp(40)));
+            xLabels[indexFrom].x = left;
+            xLabels[indexFrom].visible = true;
 
             for (int i1 = indexFrom + 1; i1 <= indexTo; i1++) {
 
                 float y = top + (1 - yn[i1]) * (height - AndroidUtilities.dp(40));
                 float x = left + (float) (i1 - indexFrom) * width / (indexTo - indexFrom);
+
+                xLabels[i1].x = x;
+                xLabels[i1].visible = true;
 
                 path.lineTo(x, y);
 
@@ -399,6 +455,12 @@ public class TelegramChart extends View {
 
             }
 
+        }
+
+        for (Label xLable : xLabels) {
+            if (xLable.visible) {
+                canvas.drawText(xLable.text, xLable.x, xLable.y, textPaint);
+            }
         }
 
         for (int i = 0; i < paths.length; i++) {
@@ -579,6 +641,7 @@ public class TelegramChart extends View {
 
     }
 
+
     private void startCircleAnimation(boolean revers) {
         if (circleRadiusAnimator == null) {
             circleRadiusAnimator = ObjectAnimator.ofFloat(this, "circleRadius", 0, smallForegroundRect.height() / 2 * 1.8f);
@@ -598,5 +661,20 @@ public class TelegramChart extends View {
         LeftHandle,
         RightHandle,
         Both
+    }
+
+    class Label {
+        float x;
+        float y;
+        String text;//
+
+        boolean visible;
+
+        public Label(float x, float y, String text) {
+            this.x = x;
+            this.y = y;
+            this.text = text;
+        }
+
     }
 }
