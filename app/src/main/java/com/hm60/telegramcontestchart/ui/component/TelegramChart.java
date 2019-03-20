@@ -5,8 +5,10 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PathMeasure;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Region;
@@ -14,6 +16,7 @@ import android.support.annotation.Keep;
 import android.support.annotation.Nullable;
 import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -26,7 +29,7 @@ import java.util.List;
 public class TelegramChart extends View {
 
     private float ratio = 11f;
-    private float slidingRectRatio = 0.33f;// 0.33 of progress section width
+    private float slidingRectRatio = 0.3f;// 0.3 of progress section width
     private float slidingRectMinWith = AndroidUtilities.dp(20);
 
     private Paint backLinesPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -340,7 +343,6 @@ public class TelegramChart extends View {
         float right = getWidth() - AndroidUtilities.dp(16);
         float width = right - left;
 
-
         for (Label xLabel : xLabels) {
             xLabel.y = bottom - AndroidUtilities.dp(25);
         }
@@ -410,7 +412,7 @@ public class TelegramChart extends View {
 
         }*/
 
-        for (Label xLabel : xLabels) {
+/*        for (Label xLabel : xLabels) {
             xLabel.visible = false;
         }
 
@@ -461,7 +463,50 @@ public class TelegramChart extends View {
             if (xLable.visible) {
                 canvas.drawText(xLable.text, xLable.x, xLable.y, textPaint);
             }
+        }*/
+
+
+        float ratio = smallForegroundRect.width() / slidingRect.width();
+
+        for (int i = 0; i < yDataListNormalized.size(); i++) {
+            Float[] yn = yDataListNormalized.get(i);
+            Path path = paths[i];
+
+            for (int i1 = 0; i1 < yn.length; i1++) {
+
+                float x = 0;
+                float y = top + (1 - yn[i1]) * (height - AndroidUtilities.dp(40));
+
+                switch (dragMode) {
+                    case LeftHandle:
+                        int p = (int) ((rightHandle.right - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (yn.length - 1));
+                        int q = (int) ((leftHandle.left - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (yn.length - 1));
+
+                        x = (right - (float) (i1 - yn.length + 1) / (p - yn.length + 1) * (right) - (xDiff * ratio));
+                        x = width - (float) (i1 - p) / (q - p) * width;
+
+                        break;
+                    case RightHandle:
+
+                        break;
+                    case Both:
+                        int tt = (int) ((yn.length - 1) * (1 - 1 / ratio));
+
+                        x = (right - (float) (i1 - yn.length + 1) / (tt - yn.length + 1) * (right) - (xDiff * ratio));
+
+                        break;
+                }
+
+
+                if (i1 == 0) {
+                    path.moveTo(x, y);
+                } else {
+                    path.lineTo(x, y);
+                }
+            }
+
         }
+
 
         for (int i = 0; i < paths.length; i++) {
             canvas.drawPath(paths[i], paints[i]);
@@ -586,6 +631,8 @@ public class TelegramChart extends View {
         return true;
     }
 
+    float xDiff;
+
     private void calcSlidingBound(float diffX) {
         switch (dragMode) {
             case LeftHandle:
@@ -620,15 +667,18 @@ public class TelegramChart extends View {
                 if (slidingRect.left < smallForegroundRect.left) {
                     slidingRect.left = smallForegroundRect.left;
                     slidingRect.right = slidingRect.left + w;
+                    this.xDiff = -(smallForegroundRect.width() - w);
                     break;
                 }
                 slidingRect.right += diffX;
                 if (slidingRect.right > smallForegroundRect.right) {
                     slidingRect.right = smallForegroundRect.right;
                     slidingRect.left = slidingRect.right - w;
+                    this.xDiff = 0;
                     break;
                 }
                 circlePoint.x += diffX;
+                this.xDiff += diffX;
                 break;
         }
 
