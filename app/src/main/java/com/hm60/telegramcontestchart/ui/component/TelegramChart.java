@@ -398,16 +398,15 @@ public class TelegramChart extends View {
             Float[] yn = chartData.yDataNormalized.get(i);
             Path path = paths[i];
 
-
             for (int i1 = 0; i1 < yn.length; i1++) {
 
                 float x = -T + w1 + left + i1 * xStep + (smallForegroundRect.right - slidingRect.right) * w1 / win;
 
-                if (x < -AndroidUtilities.dp(30)) {
+                if (x < -xStep) {
                     continue;
                 }
 
-                if (x > getWidth() + AndroidUtilities.dp(30)){
+                if (x > getWidth() + xStep){
                     break;
                 }
 
