@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 JSONArray xArray = columnsJSONArray.getJSONArray(0);
-                Long[] xData = new Long[xArray.length() - 1];
+                long[] xData = new long[xArray.length() - 1];
                 for (int i1 = 0; i1 < xData.length; i1++) {
                     xData[i1] = xArray.getLong(i1 + 1);
                 }
