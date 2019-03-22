@@ -496,12 +496,13 @@ public class TelegramChart extends View {
                 showTooltip = true;
                 tooltipX = x;
 
-                for (float v : chartData.xs) {
-                    if (Math.abs(v - tooltipX) <= chartData.xStep) {
-                         //Toast.makeText(getContext(), "" + v, Toast.LENGTH_SHORT).show();
-                         Toast.makeText(getContext(), "" + chartData.xMap.get(Math.round(v))[0], Toast.LENGTH_SHORT).show();
+                for (int i = 0; i < chartData.xs.length; i++) {
+                    float xValue = chartData.xs[i];
+                    if (Math.abs(xValue - tooltipX) <= chartData.xStep) {
+                        Toast.makeText(getContext(), "" + chartData.yDataOriginal.get(0)[i], Toast.LENGTH_SHORT).show();
 
-                         break;
+
+                        break;
                     }
                 }
 
