@@ -379,6 +379,7 @@ public class TelegramChart extends View {
             tooltipPath.reset();
         }
 
+
         for (Path path : paths) {
             path.reset();
         }
