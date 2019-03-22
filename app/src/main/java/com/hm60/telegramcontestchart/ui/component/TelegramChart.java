@@ -16,6 +16,7 @@ import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import com.hm60.telegramcontestchart.AndroidUtilities;
 import com.hm60.telegramcontestchart.util.Utils;
@@ -199,7 +200,7 @@ public class TelegramChart extends View {
         }
 
         chartData.xs = new float[xData.length];
-        chartData.xMap = new HashMap<>(yDataList.size());
+        chartData.xMap = new HashMap<>(xData.length);
 
 
         activeCharts = new boolean[yDataList.size()];
@@ -387,7 +388,12 @@ public class TelegramChart extends View {
         float win = slidingRect.width();
         float T = w0 * w1 / win;
 
+        chartData.xMap.clear();
+        float xStep = (right - left - w1 + T) / (xData.length - 1);
+        chartData.xStep = xStep;
 
+
+        Integer[] ints = new Integer[chartData.yDataNormalized.size()];
         for (int i = 0; i < chartData.yDataNormalized.size(); i++) {
             Float[] yn = chartData.yDataNormalized.get(i);
             Path path = paths[i];
@@ -395,7 +401,6 @@ public class TelegramChart extends View {
 
             for (int i1 = 0; i1 < yn.length; i1++) {
 
-                float xStep = (right - left - w1 + T) / (xData.length - 1);
                 float x = -T + w1 + left + i1 * xStep + (smallForegroundRect.right - slidingRect.right) * w1 / win;
 
                 if (x < -AndroidUtilities.dp(30)) {
@@ -409,6 +414,10 @@ public class TelegramChart extends View {
                 float y = top + (1 - yn[i1]) * (height - AndroidUtilities.dp(40));
 
                 chartData.xs[i1] = x;
+
+                float roundedX = Math.round(x);
+                ints[i] = chartData.yDataOriginal.get(i)[i1];
+                chartData.xMap.put(roundedX, ints);
 
                 if (i1 == 0) {
                     path.moveTo(x, y);
@@ -486,6 +495,17 @@ public class TelegramChart extends View {
 
                 showTooltip = true;
                 tooltipX = x;
+
+                for (float v : chartData.xs) {
+                    if (Math.abs(v - tooltipX) <= chartData.xStep) {
+                         //Toast.makeText(getContext(), "" + v, Toast.LENGTH_SHORT).show();
+                         Toast.makeText(getContext(), "" + chartData.xMap.get(Math.round(v))[0], Toast.LENGTH_SHORT).show();
+
+                         break;
+                    }
+                }
+
+
                 invalidate();
 
                 break;
@@ -638,6 +658,7 @@ public class TelegramChart extends View {
     }
 
     class ChartData {
+        float xStep;
         List<Integer[]> yDataOriginal;
         long[] xDataOriginal;
 
