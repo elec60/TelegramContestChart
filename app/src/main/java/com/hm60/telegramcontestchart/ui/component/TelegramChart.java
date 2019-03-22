@@ -14,6 +14,7 @@ import android.support.annotation.Keep;
 import android.support.annotation.Nullable;
 import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -377,123 +378,20 @@ public class TelegramChart extends View {
             path.reset();
         }
 
-        int indexFrom = 0;
-        int indexTo = 0;
+        float w0 = smallForegroundRect.width();
+        float w1 = width;
+        float win = slidingRect.width();
+        float T = w0 * w1 / win;
 
-        switch (dragMode) {
-
-            case LeftHandle:
-            case RightHandle:
-                indexFrom = (int) ((leftHandle.left - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
-                indexTo = (int) ((rightHandle.right - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
-                break;
-            case Both:
-                //(indexTo - indexFrom) should be constant at this point
-                indexFrom = (int) ((leftHandle.left - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (xData.length - 1));
-                indexTo = (int) (indexFrom + 1 + slidingRect.width() / smallForegroundRect.width() * (xData.length - 1));
-                break;
-        }
-
-        //draw xAxis labels
-/*        int count = indexTo - indexFrom;
-        int step = count / 6;
-        int Y = (int) (bottom - AndroidUtilities.dp(25));
-        for (int i = 0; i < 6; i++) {
-            String dateString = Utils.toShortDateString(xData[indexTo - i * step]);
-
-            int k = indexTo - i * step - xData.length + 1;
-
-            int x = (int) (right + (k - 1) * AndroidUtilities.dp(30));
-
-            canvas.drawText(dateString, x, Y, textPaint);
-
-        }*/
-
-/*        for (Label xLabel : xLabels) {
-            xLabel.visible = false;
-        }
-
-
-
-        for (int i = 0; i < yDataListNormalized.size(); i++) {
-            Float[] yn = yDataListNormalized.get(i);
-            Path path = paths[i];
-
-            path.moveTo(left, top + (1 - yn[indexFrom]) * (height - AndroidUtilities.dp(40)));
-            xLabels[indexFrom].x = left;
-            xLabels[indexFrom].visible = true;
-
-            for (int i1 = indexFrom + 1; i1 <= indexTo; i1++) {
-
-                float y = top + (1 - yn[i1]) * (height - AndroidUtilities.dp(40));
-                float x = left + (float) (i1 - indexFrom) * width / (indexTo - indexFrom);
-
-                xLabels[i1].x = x;
-                xLabels[i1].visible = true;
-
-                path.lineTo(x, y);
-
-                if (showTooltip) {
-
-                    int index = indexFrom + Math.round((tooltipX - left) / width * (indexTo - indexFrom));
-                    if (index == i1) {
-
-                        if (i == 0) {// before first circle added, so move to starting point
-                            indicatorLinePath.moveTo(x, bottom - AndroidUtilities.dp(40));
-                        }
-                        indicatorLinePath.lineTo(x, y);
-                        Path tooltipPath = tooltipPaths[i];
-                        tooltipPath.addCircle(x, y, AndroidUtilities.dp(4), Path.Direction.CW);
-
-                        if ((i == yDataListNormalized.size() - 1)) {//last circle added, so line to ending point
-                            indicatorLinePath.lineTo(x, paddingTop);
-                        }
-                    }
-
-                }
-
-            }
-
-        }
-
-        for (Label xLable : xLabels) {
-            if (xLable.visible) {
-                canvas.drawText(xLable.text, xLable.x, xLable.y, textPaint);
-            }
-        }*/
-
-
-        float ratio = smallForegroundRect.width() / slidingRect.width();
 
         for (int i = 0; i < yDataListNormalized.size(); i++) {
             Float[] yn = yDataListNormalized.get(i);
             Path path = paths[i];
 
             for (int i1 = 0; i1 < yn.length; i1++) {
-
-                float x = 0;
                 float y = top + (1 - yn[i1]) * (height - AndroidUtilities.dp(40));
-
-                switch (dragMode) {
-                    case LeftHandle:
-                        int p = (int) ((rightHandle.right - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (yn.length - 1));
-                        int q = (int) ((leftHandle.left - AndroidUtilities.dp(16)) / smallForegroundRect.width() * (yn.length - 1));
-
-                        x = (right - (float) (i1 - yn.length + 1) / (p - yn.length + 1) * (right) - (xDiff * ratio));
-                        x = width - (float) (i1 - p) / (q - p) * width;
-
-                        break;
-                    case RightHandle:
-
-                        break;
-                    case Both:
-                        int tt = (int) ((yn.length - 1) * (1 - 1 / ratio));
-
-                        x = (right - (float) (i1 - yn.length + 1) / (tt - yn.length + 1) * (right) - (xDiff * ratio));
-
-                        break;
-                }
-
+                float xStep = (right - left - w1 + T) / (xData.length - 1);
+                float x = -T + w1 + left + i1 * xStep - xDiff * w1 / win;
 
                 if (i1 == 0) {
                     path.moveTo(x, y);
@@ -650,12 +548,20 @@ public class TelegramChart extends View {
                 if (slidingRect.right > smallForegroundRect.right) {
                     slidingRect.right = smallForegroundRect.right;
                     circlePoint.x = rightHandle.centerX();
+                    this.xDiff = 0;
+                    break;
                 }
 
                 if (diffX < 0 && slidingRect.width() < slidingRectMinWith) {
                     slidingRect.right = slidingRect.left + slidingRectMinWith;
                     circlePoint.x = rightHandle.centerX();
+
+                    float w = slidingRect.width();
+                    this.xDiff = -(smallForegroundRect.width() - w);
+                    break;
                 }
+
+                this.xDiff += diffX;
 
                 break;
             case Both:
@@ -722,6 +628,12 @@ public class TelegramChart extends View {
             this.y = y;
             this.text = text;
         }
+
+    }
+
+    class ChartData {
+        SparseArray<Integer[]> yDataOriginal;
+        int[] xDataOriginal;
 
     }
 }
