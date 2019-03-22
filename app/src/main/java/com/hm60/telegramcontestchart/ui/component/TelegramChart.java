@@ -198,6 +198,10 @@ public class TelegramChart extends View {
             chartData.yDataNormalized.add(yNormalized);
         }
 
+        chartData.xs = new float[xData.length];
+        chartData.xMap = new HashMap<>(yDataList.size());
+
+
         activeCharts = new boolean[yDataList.size()];
         for (int i = 0; i < activeCharts.length; i++) {
             activeCharts[i] = true;
@@ -388,10 +392,23 @@ public class TelegramChart extends View {
             Float[] yn = chartData.yDataNormalized.get(i);
             Path path = paths[i];
 
+
             for (int i1 = 0; i1 < yn.length; i1++) {
-                float y = top + (1 - yn[i1]) * (height - AndroidUtilities.dp(40));
+
                 float xStep = (right - left - w1 + T) / (xData.length - 1);
                 float x = -T + w1 + left + i1 * xStep + (smallForegroundRect.right - slidingRect.right) * w1 / win;
+
+                if (x < -AndroidUtilities.dp(30)) {
+                    continue;
+                }
+
+                if (x > getWidth() + AndroidUtilities.dp(30)){
+                    break;
+                }
+
+                float y = top + (1 - yn[i1]) * (height - AndroidUtilities.dp(40));
+
+                chartData.xs[i1] = x;
 
                 if (i1 == 0) {
                     path.moveTo(x, y);
@@ -628,7 +645,7 @@ public class TelegramChart extends View {
 
         float[] xs;
 
-        HashMap<Float, Integer> xMap;
+        HashMap<Float, Integer[]> xMap;
 
     }
 }
