@@ -22,6 +22,7 @@ import com.hm60.telegramcontestchart.AndroidUtilities;
 import com.hm60.telegramcontestchart.util.Utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class TelegramChart extends View {
@@ -634,6 +635,10 @@ public class TelegramChart extends View {
     class ChartData {
         SparseArray<Integer[]> yDataOriginal;
         int[] xDataOriginal;
+
+        SparseArray<Float[]> yDataNormalized;
+
+        HashMap<Float, Integer> xMap;
 
     }
 }
