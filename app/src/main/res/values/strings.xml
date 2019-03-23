@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">TelegramContestChart</string>
+    <string name="followers">Followers</string>
 </resources>

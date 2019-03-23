@@ -49,12 +49,6 @@ public class TelegramChart extends View {
     private Path[] pathsSmall;
     private TextPaint textPaint = new TextPaint();
 
-
-    private long[] xData;
-    private String[] names;
-    private String[] colors;
-    private String[] types;
-
     private RectF slidingRect = new RectF();
     private RectF smallForegroundRect = new RectF();
 
@@ -142,10 +136,6 @@ public class TelegramChart extends View {
 
 
     public void setData(List<Integer[]> yDataList, long[] xData, String[] names, String[] colors, String[] types) {
-        this.xData = xData;
-        this.names = names;
-        this.colors = colors;
-        this.types = types;
 
         chartData.yDataOriginal = yDataList;
         chartData.xDataOriginal = xData;
@@ -383,7 +373,7 @@ public class TelegramChart extends View {
         float win = slidingRect.width();
         float T = w0 * w1 / win;
 
-        float xStep = (right - left - w1 + T) / (xData.length - 1);
+        float xStep = (right - left - w1 + T) / (chartData.xDataOriginal.length - 1);
         chartData.xStep = xStep;
 
 
@@ -430,7 +420,7 @@ public class TelegramChart extends View {
             }
             int index = Math.round((tooltipX + T - w1 - left - (smallForegroundRect.right - slidingRect.right) * w1 / win) / xStep);
             if (index < 0) index = 0;
-            if (index >= xData.length) index = xData.length - 1;
+            if (index >= chartData.xDataOriginal.length) index = chartData.xDataOriginal.length - 1;
             float x = -T + w1 + left + index * xStep + (smallForegroundRect.right - slidingRect.right) * w1 / win;
 
             indicatorLinePath.moveTo(x, bottom - AndroidUtilities.dp(40));
@@ -514,17 +504,6 @@ public class TelegramChart extends View {
 
                 showTooltip = true;
                 tooltipX = x;
-
-                for (int i = 0; i < chartData.xs.length; i++) {
-                    float xValue = chartData.xs[i];
-                    if (Math.abs(xValue - tooltipX) <= chartData.xStep) {
-                        // Toast.makeText(getContext(), "" + chartData.yDataOriginal.get(0)[i], Toast.LENGTH_SHORT).show();
-
-
-                        break;
-                    }
-                }
-
 
                 invalidate();
 

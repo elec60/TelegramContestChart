@@ -24,6 +24,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Statistics");
+        }
+
         setTheme(0);
 
         chart = findViewById(R.id.chart);
