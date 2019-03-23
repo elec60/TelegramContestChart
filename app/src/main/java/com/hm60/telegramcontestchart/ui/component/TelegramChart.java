@@ -369,12 +369,6 @@ public class TelegramChart extends View {
                     backLinesPaint);
         }
 
-        indicatorLinePath.reset();
-
-        for (Path tooltipPath : tooltipPaths) {
-            tooltipPath.reset();
-        }
-
 
         for (Path path : paths) {
             path.reset();
@@ -425,12 +419,17 @@ public class TelegramChart extends View {
 
 
         if (showTooltip) {
+            indicatorLinePath.reset();
+
+            for (Path tooltipPath : tooltipPaths) {
+                tooltipPath.reset();
+            }
             int index = Math.round((tooltipX + T - w1 - left - (smallForegroundRect.right - slidingRect.right) * w1 / win) / xStep);
             if (index < 0) index = 0;
             if (index >= xData.length) index = xData.length - 1;
             float x = -T + w1 + left + index * xStep + (smallForegroundRect.right - slidingRect.right) * w1 / win;
 
-            indicatorLinePath.moveTo(tooltipX, bottom - AndroidUtilities.dp(40));
+            indicatorLinePath.moveTo(x, bottom - AndroidUtilities.dp(40));
 
             for (int i = 0; i < chartData.yDataOriginal.size(); i++) {
                 float y = top + (1 - chartData.yDataNormalized.get(i)[index]) * (height - AndroidUtilities.dp(40));
@@ -448,18 +447,17 @@ public class TelegramChart extends View {
                 canvas.drawPath(tooltipPath, paints[i]);
             }
 
+            backLinesPaint.setColor(0xFFDFE6EB);
+            backLinesPaint.setStrokeWidth(AndroidUtilities.dp(1));
+            canvas.drawPath(indicatorLinePath, backLinesPaint);
+
+            for (int i = 0; i < tooltipPaths.length; i++) {
+                Path tooltipPath = tooltipPaths[i];
+                canvas.drawPath(tooltipPath, indicatorCirclePaint);
+                canvas.drawPath(tooltipPath, paints[i]);
+            }
+
         }
-
-        backLinesPaint.setColor(0xFFDFE6EB);
-        backLinesPaint.setStrokeWidth(AndroidUtilities.dp(1));
-        canvas.drawPath(indicatorLinePath, backLinesPaint);
-
-        for (int i = 0; i < tooltipPaths.length; i++) {
-            Path tooltipPath = tooltipPaths[i];
-            canvas.drawPath(tooltipPath, indicatorCirclePaint);
-            canvas.drawPath(tooltipPath, paints[i]);
-        }
-
 
     }
 
