@@ -1,32 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".MainActivity">
-
-    <com.hm60.telegramcontestchart.ui.component.TelegramChart
-        android:id="@+id/chart"
-        android:layout_width="match_parent"
-        android:layout_height="400dp"
-        android:background="#ffffff"
-        android:paddingTop="16dp"
-        android:paddingBottom="16dp" />
+    android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <LinearLayout
-        android:id="@+id/checkbox_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:divider="@drawable/divider_inset_16dp"
-        android:showDividers="middle">
+        tools:context=".MainActivity">
 
+        <com.hm60.telegramcontestchart.ui.component.TelegramChart
+            android:id="@+id/chart"
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:background="#ffffff"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp" />
+
+        <LinearLayout
+            android:id="@+id/checkbox_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:divider="@drawable/divider_inset_16dp"
+            android:showDividers="middle"/>
 
     </LinearLayout>
 
-
-
-
-</LinearLayout>
+</ScrollView>

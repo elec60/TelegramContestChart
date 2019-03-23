@@ -221,7 +221,6 @@ public class TelegramChart extends View {
         drawSmallSection(canvas);
 
         drawLargeSection(canvas);
-
     }
 
 
