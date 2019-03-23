@@ -436,9 +436,12 @@ public class TelegramChart extends View {
             indicatorLinePath.moveTo(x, bottom - AndroidUtilities.dp(40));
 
             for (int i = 0; i < chartData.yDataOriginal.size(); i++) {
-                float y = top + (1 - chartData.yDataNormalized.get(i)[index]) * (height - AndroidUtilities.dp(40));
-                Path tooltipPath = tooltipPaths[i];
-                tooltipPath.addCircle(x, y, AndroidUtilities.dp(4), Path.Direction.CW);
+                boolean visible = chartData.visibles[i];
+                if (visible) {
+                    float y = top + (1 - chartData.yDataNormalized.get(i)[index]) * (height - AndroidUtilities.dp(40));
+                    Path tooltipPath = tooltipPaths[i];
+                    tooltipPath.addCircle(x, y, AndroidUtilities.dp(4), Path.Direction.CW);
+                }
             }
 
             indicatorLinePath.lineTo(x, paddingTop);
@@ -662,43 +665,49 @@ public class TelegramChart extends View {
             }
         }
 
+        if (lastMaxValue != maxValue[0]) {
+            ValueAnimator valueAnimator = ValueAnimator.ofFloat(lastMaxValue, maxValue[0]);
+            lastMaxValue = maxValue[0];
+            valueAnimator.setDuration(400);
+            valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    maxValue[0] = (float) animation.getAnimatedValue();
 
-        ValueAnimator valueAnimator = ValueAnimator.ofFloat(lastMaxValue, maxValue[0]);
-        lastMaxValue = maxValue[0];
-        valueAnimator.setDuration(400);
-        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                maxValue[0] = (float) animation.getAnimatedValue();
+                    normalizeByMax(maxValue[0]);
+                }
+            });
 
-                normalizeByMax(maxValue[0]);
-            }
-        });
+            valueAnimator.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
 
-        valueAnimator.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
+                }
 
-            }
+                @Override
+                public void onAnimationEnd(Animator animation) {
 
-            @Override
-            public void onAnimationEnd(Animator animation) {
+                }
 
-            }
+                @Override
+                public void onAnimationCancel(Animator animation) {
 
-            @Override
-            public void onAnimationCancel(Animator animation) {
+                }
 
-            }
+                @Override
+                public void onAnimationRepeat(Animator animation) {
 
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
-            }
-        });
+                }
+            });
 
 
-        valueAnimator.start();
+            valueAnimator.start();
+        }else {
+           // normalizeByMax(maxValue[0]);
+            postInvalidate();
+        }
+
+
     }
 
     private void normalizeByMax(float v) {
