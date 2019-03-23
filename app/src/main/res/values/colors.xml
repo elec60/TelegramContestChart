@@ -4,4 +4,7 @@
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
     <color name="test">#905E5959</color>
+
+    <color name="backgroundLineColor">#FFEDEDEF</color>
+    <color name="xAxisColor">#FFE1E2E4</color>
 </resources>

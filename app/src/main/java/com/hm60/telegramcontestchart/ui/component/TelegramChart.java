@@ -18,6 +18,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.hm60.telegramcontestchart.AndroidUtilities;
+import com.hm60.telegramcontestchart.R;
 import com.hm60.telegramcontestchart.util.Utils;
 
 import java.util.ArrayList;
@@ -71,8 +72,6 @@ public class TelegramChart extends View {
 
     private float circleRadius;
     private PointF circlePoint = new PointF();
-    private int xAxisColor = 0xFFE1E2E4;
-    private int backgroundLinesColor = 0xFFEDEDEF;
 
     @Keep
     public void setCircleRadius(float circleRadius) {
@@ -126,7 +125,7 @@ public class TelegramChart extends View {
         circlePaint.setStyle(Paint.Style.FILL);
         circlePaint.setColor(0x88ECECF5);
 
-        backLinesPaint.setColor(xAxisColor);
+        backLinesPaint.setColor(getResources().getColor(R.color.xAxisColor));
         backLinesPaint.setStyle(Paint.Style.STROKE);
 
         textPaint.setColor(0xFF84919A);
@@ -351,10 +350,10 @@ public class TelegramChart extends View {
             xLabel.y = bottom - AndroidUtilities.dp(25);
         }
 
-        backLinesPaint.setStrokeWidth(0);
 
         //xAxis
-        backLinesPaint.setColor(xAxisColor);
+        backLinesPaint.setStrokeWidth(0);
+        backLinesPaint.setColor(getResources().getColor(R.color.xAxisColor));
         canvas.drawLine(left,
                 bottom - AndroidUtilities.dp(40),
                 right,
@@ -362,7 +361,7 @@ public class TelegramChart extends View {
                 backLinesPaint);
 
         //background lines
-        backLinesPaint.setColor(backgroundLinesColor);
+        backLinesPaint.setColor(getResources().getColor(R.color.backgroundLineColor));
 
         for (int i = 1; i <= 5; i++) {
             int y = (int) (bottom - smallSectionHeight - height / 6 * i);
