@@ -3,6 +3,8 @@ package com.hm60.telegramcontestchart;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.AppCompatTextView;
+import android.text.StaticLayout;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
@@ -38,16 +40,15 @@ public class MainActivity extends AppCompatActivity {
             getSupportActionBar().setTitle("Statistics");
         }
 
-        setTheme(0);
 
         chart = findViewById(R.id.chart);
 
         JSONArray jsonArray = readJsonDataFromAssets("chart_data.json");
 
         int chartsCount = jsonArray.length();
-        chartsCount = 3;
+        chartsCount = 5;
 
-        for (int i = 2; i < chartsCount; i++) {
+        for (int i = 4; i < chartsCount; i++) {
             try {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
                 JSONArray columnsJSONArray = jsonObject.getJSONArray("columns");

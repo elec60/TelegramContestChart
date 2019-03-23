@@ -12,12 +12,15 @@ import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Region;
+import android.graphics.Typeface;
 import android.support.annotation.Keep;
 import android.support.annotation.Nullable;
+import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.hm60.telegramcontestchart.AndroidUtilities;
@@ -45,6 +48,9 @@ public class TelegramChart extends View {
     private Paint indicatorCirclePaint = new Paint();
     private Paint indicatorLinePaint = new Paint();
     private Path indicatorLinePath = new Path();
+    private RectF tooltipRect = new RectF();
+    private Paint tooltipPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 
     private Paint[] paints;
     private Path[] paths;
@@ -135,6 +141,10 @@ public class TelegramChart extends View {
         indicatorLinePaint.setStyle(Paint.Style.STROKE);
         indicatorLinePaint.setStrokeWidth(AndroidUtilities.dp(1));
 
+        tooltipPaint.setStyle(Paint.Style.FILL);
+        tooltipPaint.setColor(getResources().getColor(R.color.tooltipBackColor));
+        tooltipPaint.setShadowLayer(5f,0f, 2f, Color.GRAY);
+
     }
 
 
@@ -142,6 +152,7 @@ public class TelegramChart extends View {
         chartData.title = title;
         chartData.yDataOriginal = yDataList;
         chartData.xDataOriginal = xData;
+        chartData.names = names;
 
         paints = new Paint[yDataList.size()];
         for (int i = 0; i < paints.length; i++) {
@@ -325,6 +336,8 @@ public class TelegramChart extends View {
     }
 
 
+    private StaticLayout staticLayout;
+
     private void drawLargeSection(Canvas canvas) {
         int paddingBottom = getPaddingBottom();
         int paddingTop = getPaddingTop();
@@ -461,6 +474,55 @@ public class TelegramChart extends View {
                 canvas.drawPath(tooltipPath, paints[i]);
             }
 
+            tooltipRect.left = x - AndroidUtilities.dp(14);
+            tooltipRect.top = top;
+            tooltipRect.right = tooltipRect.left + AndroidUtilities.dp(84);
+            tooltipRect.bottom = tooltipRect.top + AndroidUtilities.dp(54);
+
+
+            canvas.drawRoundRect(tooltipRect, AndroidUtilities.dp(5), AndroidUtilities.dp(5), tooltipPaint);
+
+            long millis = chartData.xDataOriginal[index];
+            String dateOnTooltip = Utils.toShortDateString2(millis);
+            textPaint.measureText(dateOnTooltip);
+            float h = textPaint.descent() - textPaint.ascent();
+
+            textPaint.setColor(getResources().getColor(R.color.tooltipTitleTextColor));
+            textPaint.setTextSize(AndroidUtilities.dp(12));
+            float titleTextY = top + h + AndroidUtilities.dp(2);
+            float titleTextX = x - AndroidUtilities.dp(8);
+
+            canvas.drawText(dateOnTooltip,
+                    titleTextX,
+                    titleTextY,
+                    textPaint);
+
+            int n = 0;
+            for (int i = 0; i < chartData.yDataOriginal.size(); i++) {
+                boolean visible = chartData.visibles[i];
+
+                if (visible) {
+                    int count = chartData.yDataOriginal.get(i)[index];
+                    String name = chartData.names[i];
+
+                    textPaint.setColor(paints[i].getColor());
+                    textPaint.setTypeface(Typeface.DEFAULT_BOLD);
+                    canvas.drawText(String.valueOf(count),
+                            titleTextX + n % 2 * AndroidUtilities.dp(40),
+                            titleTextY + (float) Math.ceil((n + 1) / 2f) * AndroidUtilities.dp(20),
+                            textPaint);
+
+                    textPaint.setTypeface(null);
+                    canvas.drawText(name,
+                            titleTextX + n % 2 * AndroidUtilities.dp(40),
+                            titleTextY + (float) Math.ceil((n + 1) / 2f) * AndroidUtilities.dp(32),
+                            textPaint);
+
+                    n++;
+                }
+            }
+
+
         }
 
     }
@@ -522,6 +584,7 @@ public class TelegramChart extends View {
                 break;
 
             case MotionEvent.ACTION_MOVE:
+                getParent().requestDisallowInterceptTouchEvent(true);
                 x = event.getX();
                 y = event.getY();
                 if (isDraggingLeftHandle) {
@@ -750,6 +813,7 @@ public class TelegramChart extends View {
     }
 
     static class ChartData {
+        String[] names;
         String title;
         List<Integer[]> yDataOriginal;
         List<Float[]> yDataNormalized;//y data are normalized (max of max y value mapped to 1 and other values mapped at same ratio)
