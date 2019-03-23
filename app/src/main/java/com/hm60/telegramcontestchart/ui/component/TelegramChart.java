@@ -200,8 +200,6 @@ public class TelegramChart extends View {
         }
 
         chartData.xs = new float[xData.length];
-        chartData.xMap = new HashMap<>(xData.length);
-
 
         activeCharts = new boolean[yDataList.size()];
         for (int i = 0; i < activeCharts.length; i++) {
@@ -389,12 +387,10 @@ public class TelegramChart extends View {
         float win = slidingRect.width();
         float T = w0 * w1 / win;
 
-        chartData.xMap.clear();
         float xStep = (right - left - w1 + T) / (xData.length - 1);
         chartData.xStep = xStep;
 
 
-        Integer[] ints = new Integer[chartData.yDataNormalized.size()];
         for (int i = 0; i < chartData.yDataNormalized.size(); i++) {
             Float[] yn = chartData.yDataNormalized.get(i);
             Path path = paths[i];
@@ -407,17 +403,13 @@ public class TelegramChart extends View {
                     continue;
                 }
 
-                if (x > getWidth() + xStep){
+                if (x > getWidth() + xStep) {
                     break;
                 }
 
                 float y = top + (1 - yn[i1]) * (height - AndroidUtilities.dp(40));
 
                 chartData.xs[i1] = x;
-
-                float roundedX = Math.round(x);
-                ints[i] = chartData.yDataOriginal.get(i)[i1];
-                chartData.xMap.put(roundedX, ints);
 
                 if (i1 == 0) {
                     path.moveTo(x, y);
@@ -437,9 +429,24 @@ public class TelegramChart extends View {
         backLinesPaint.setStrokeWidth(AndroidUtilities.dp(1));
         canvas.drawPath(indicatorLinePath, backLinesPaint);
 
-        for (int i = 0; i < tooltipPaths.length; i++) {
-            canvas.drawPath(tooltipPaths[i], indicatorCirclePaint);
-            canvas.drawPath(tooltipPaths[i], paints[i]);
+        if (showTooltip) {
+            int index = Math.round((tooltipX + T - w1 - left - (smallForegroundRect.right - slidingRect.right) * w1 / win) / xStep);
+            if (index < 0) index = 0;
+            if (index >= xData.length) index = xData.length - 1;
+
+
+
+            for (int i = 0; i < tooltipPaths.length; i++) {
+                canvas.drawPath(tooltipPaths[i], indicatorCirclePaint);
+                canvas.drawPath(tooltipPaths[i], paints[i]);
+            }
+
+/*            String t = "index: " + index;
+            for (Integer[] integers : chartData.yDataOriginal) {
+                t += "\ny:" + integers[index];
+            }
+            Toast.makeText(getContext(), t, Toast.LENGTH_LONG).show();*/
+
         }
 
     }
@@ -499,7 +506,7 @@ public class TelegramChart extends View {
                 for (int i = 0; i < chartData.xs.length; i++) {
                     float xValue = chartData.xs[i];
                     if (Math.abs(xValue - tooltipX) <= chartData.xStep) {
-                        Toast.makeText(getContext(), "" + chartData.yDataOriginal.get(0)[i], Toast.LENGTH_SHORT).show();
+                       // Toast.makeText(getContext(), "" + chartData.yDataOriginal.get(0)[i], Toast.LENGTH_SHORT).show();
 
 
                         break;
@@ -666,8 +673,6 @@ public class TelegramChart extends View {
         List<Float[]> yDataNormalized;
 
         float[] xs;
-
-        HashMap<Float, Integer[]> xMap;
 
     }
 }
