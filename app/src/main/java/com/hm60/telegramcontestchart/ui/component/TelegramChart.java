@@ -1,6 +1,7 @@
 package com.hm60.telegramcontestchart.ui.component;
 
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -66,6 +67,8 @@ public class TelegramChart extends View {
 
     private float circleRadius;
     private PointF circlePoint = new PointF();
+
+    private float lastMaxValue;
 
     @Keep
     public void setCircleRadius(float circleRadius) {
@@ -138,14 +141,6 @@ public class TelegramChart extends View {
         chartData.yDataOriginal = yDataList;
         chartData.xDataOriginal = xData;
 
-        int maxValue = Integer.MIN_VALUE;
-
-        for (Integer[] ys : yDataList) {
-            for (Integer y : ys) {
-                if (y > maxValue) maxValue = y;
-            }
-        }
-
         paints = new Paint[yDataList.size()];
         for (int i = 0; i < paints.length; i++) {
             Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -178,6 +173,15 @@ public class TelegramChart extends View {
         for (int i = 0; i < tooltipPaths.length; i++) {
             tooltipPaths[i] = new Path();
         }
+
+        int maxValue = Integer.MIN_VALUE;
+        for (Integer[] ys : yDataList) {
+            for (Integer y : ys) {
+                if (y > maxValue) maxValue = y;
+            }
+        }
+
+        lastMaxValue = maxValue;
 
         chartData.yDataNormalized = new ArrayList<>(yDataList.size());
         for (Integer[] ys : yDataList) {
@@ -285,7 +289,11 @@ public class TelegramChart extends View {
 
 
         for (int i = 0; i < pathsSmall.length; i++) {
-            canvas.drawPath(pathsSmall[i], paintsSmall[i]);
+            boolean visible = chartData.visibles[i];
+            if (visible) {
+                canvas.drawPath(pathsSmall[i], paintsSmall[i]);
+            }
+
         }
 
         //top border
@@ -630,8 +638,55 @@ public class TelegramChart extends View {
     private DragMode dragMode = DragMode.Both;
 
     public void setActiveChart(int index, boolean isChecked) {
-        regenerate = true;
-        postInvalidate();
+        chartData.visibles[index] = isChecked;
+        reNormalizeDataWithAnimation();
+        //postInvalidate();
+    }
+
+    private void reNormalizeDataWithAnimation() {
+
+        final float[] maxValue = {Integer.MIN_VALUE};
+        for (int i = 0; i < chartData.yDataOriginal.size(); i++) {
+            if (chartData.visibles[i]){
+                Integer[] ys = chartData.yDataOriginal.get(i);
+                for (Integer y : ys) {
+                    if (y > maxValue[0]) maxValue[0] = y;
+                }
+            }
+        }
+
+
+        ValueAnimator valueAnimator = ValueAnimator.ofFloat(lastMaxValue, maxValue[0]);
+        lastMaxValue = maxValue[0];
+        valueAnimator.setDuration(400);
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                maxValue[0] = (float) animation.getAnimatedValue();
+                chartData.yDataNormalized.clear();
+
+                for (int i1 = 0; i1 < chartData.yDataOriginal.size(); i1++) {
+                    if (!chartData.visibles[i1]) {
+                        continue;
+                    }
+
+                    Integer[] ys = chartData.yDataOriginal.get(i1);
+                    Float[] yNormalized = new Float[ys.length];
+                    for (int i = 0; i < ys.length; i++) {
+
+                        float f = (float) (ys[i]) / maxValue[0];
+                        yNormalized[i] = f;
+                    }
+                    chartData.yDataNormalized.add(yNormalized);
+                }
+
+                regenerate = true;
+                invalidate();
+            }
+        });
+
+
+        valueAnimator.start();
     }
 
     enum DragMode {
