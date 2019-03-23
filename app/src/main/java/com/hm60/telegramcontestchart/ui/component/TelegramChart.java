@@ -29,7 +29,7 @@ public class TelegramChart extends View {
     private ChartData chartData;
 
     private float ratio = 11f;
-    private float slidingRectRatio = 0.3f;// 0.3 of progress section width
+    private float slidingRectRatio = 0.25f;// 0.25 of progress section width
     private float slidingRectMinWith = AndroidUtilities.dp(20);
 
     private Paint backLinesPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -84,8 +84,6 @@ public class TelegramChart extends View {
     private float lastXRight;
     private float lastXSlidingRect;
 
-    private boolean[] activeCharts;
-
     private Label[] xLabels;
 
 
@@ -135,8 +133,8 @@ public class TelegramChart extends View {
     }
 
 
-    public void setData(List<Integer[]> yDataList, long[] xData, String[] names, String[] colors, String[] types) {
-
+    public void setData(List<Integer[]> yDataList, long[] xData, String[] names, String[] colors, String[] types, String title) {
+        chartData.title = title;
         chartData.yDataOriginal = yDataList;
         chartData.xDataOriginal = xData;
 
@@ -192,13 +190,11 @@ public class TelegramChart extends View {
         }
 
         chartData.xs = new float[xData.length];
-
-        activeCharts = new boolean[yDataList.size()];
-        for (int i = 0; i < activeCharts.length; i++) {
-            activeCharts[i] = true;
+        chartData.visibles = new boolean[yDataList.size()];
+        for (int i = 0; i < chartData.visibles.length; i++) {
+            chartData.visibles[i] = true;
         }
 
-        //activeCharts[0] = false;
 
         xLabels = new Label[xData.length];
         for (int i = 0; i < xData.length; i++) {
@@ -268,15 +264,13 @@ public class TelegramChart extends View {
             }
 
             for (int i = 0; i < chartData.yDataNormalized.size(); i++) {
-                boolean activeChart = activeCharts[i];
-                if (!activeChart) {
+                boolean visible = chartData.visibles[i];
+                if (!visible) {
                     continue;
                 }
                 Float[] yn = chartData.yDataNormalized.get(i);
                 Path path = pathsSmall[i];
                 path.moveTo(left, top + (1 - yn[0]) * height);
-
-                //path.offset();
 
                 for (int i1 = 1; i1 < yn.length; i1++) {
 
@@ -635,6 +629,11 @@ public class TelegramChart extends View {
 
     private DragMode dragMode = DragMode.Both;
 
+    public void setActiveChart(int index, boolean isChecked) {
+        regenerate = true;
+        postInvalidate();
+    }
+
     enum DragMode {
         LeftHandle,
         RightHandle,
@@ -656,11 +655,13 @@ public class TelegramChart extends View {
 
     }
 
-    class ChartData {
+    static class ChartData {
+        String title;
         List<Integer[]> yDataOriginal;
         List<Float[]> yDataNormalized;//y data are normalized (max of max y value mapped to 1 and other values mapped at same ratio)
         float xStep;//x direction step for path.LineTo
         long[] xDataOriginal;
         float[] xs;//x positions of data on screen
+        boolean[] visibles;
     }
 }

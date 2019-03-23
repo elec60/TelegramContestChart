@@ -3,9 +3,8 @@
     <color name="colorPrimary">#496990</color>
     <color name="colorPrimaryDark">#33506f</color>
     <color name="colorAccent">#D81B60</color>
-    <color name="test">#905E5959</color>
 
     <color name="backgroundLineColor">#FFE8EAF6</color>
     <color name="xAxisColor">#B8B8B9</color>
-    <color name="textColorBlue">#3894d4</color>
+    <color name="titleTextColor">#3894d4</color>
 </resources>

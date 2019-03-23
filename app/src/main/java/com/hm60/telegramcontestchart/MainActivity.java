@@ -1,7 +1,12 @@
 package com.hm60.telegramcontestchart;
 
+import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.hm60.telegramcontestchart.ui.component.TelegramChart;
 
@@ -22,7 +27,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setTheme(R.style.AppTheme_Night);
+
         setContentView(R.layout.activity_main);
+
+        LinearLayout container = findViewById(R.id.checkbox_container);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Statistics");
@@ -75,13 +85,36 @@ public class MainActivity extends AppCompatActivity {
                     yDataList.add(yData);
                 }
 
-                chart.setData(yDataList, xData, names, colors, types);
+                chart.setData(yDataList, xData, names, colors, types, "Followers");
+
+                for (int i1 = 0; i1 < yDataList.size(); i1++) {
+                    String name = names[i1];
+                    String color = colors[i1];
+
+                    container.addView(createCheckBox(i1, name, color));
+                }
 
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
 
+    }
+
+    private CheckBox createCheckBox(int i1, String name, String color) {
+        final CheckBox cb = new CheckBox(this);
+        cb.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4));
+        cb.setChecked(true);
+        cb.setText(name);
+        cb.setHighlightColor(Color.parseColor(color));
+        cb.setTag(i1);
+        cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                chart.setActiveChart((int)buttonView.getTag(), isChecked);
+            }
+        });
+        return cb;
     }
 
     public JSONArray readJsonDataFromAssets(String jsonFileName) {
