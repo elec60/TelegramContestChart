@@ -277,7 +277,7 @@ public class TelegramChart extends View {
                 path.reset();
             }
 
-            for (int i = 0; i <  chartData.yDataNormalized.size(); i++) {
+            for (int i = 0; i < chartData.yDataNormalized.size(); i++) {
                 boolean activeChart = activeCharts[i];
                 if (!activeChart) {
                     continue;
@@ -518,7 +518,7 @@ public class TelegramChart extends View {
                 for (int i = 0; i < chartData.xs.length; i++) {
                     float xValue = chartData.xs[i];
                     if (Math.abs(xValue - tooltipX) <= chartData.xStep) {
-                       // Toast.makeText(getContext(), "" + chartData.yDataOriginal.get(0)[i], Toast.LENGTH_SHORT).show();
+                        // Toast.makeText(getContext(), "" + chartData.yDataOriginal.get(0)[i], Toast.LENGTH_SHORT).show();
 
 
                         break;
@@ -678,13 +678,10 @@ public class TelegramChart extends View {
     }
 
     class ChartData {
-        float xStep;
         List<Integer[]> yDataOriginal;
+        List<Float[]> yDataNormalized;//y data are normalized (max of max y value mapped to 1 and other values mapped at same ratio)
+        float xStep;//x direction step for path.LineTo
         long[] xDataOriginal;
-
-        List<Float[]> yDataNormalized;
-
-        float[] xs;
-
+        float[] xs;//x positions of data on screen
     }
 }
