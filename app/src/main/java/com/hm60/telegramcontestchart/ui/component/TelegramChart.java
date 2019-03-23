@@ -35,10 +35,11 @@ public class TelegramChart extends View {
 
     private Paint circlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-    boolean showTooltip;
-    float tooltipX;
+    private boolean showTooltip;
+    private float tooltipX;
     private Path[] tooltipPaths;
     private Paint indicatorCirclePaint = new Paint();
+    private Paint indicatorLinePaint = new Paint();
     private Path indicatorLinePath = new Path();
 
     private Paint[] paints;
@@ -83,12 +84,12 @@ public class TelegramChart extends View {
         invalidate();
     }
 
-    boolean isDraggingLeftHandle;
-    boolean isDraggingRightHandle;
-    boolean isDraggingSlidingRect;
-    float lastXLeft;
-    float lastXRight;
-    float lastXSlidingRect;
+    private boolean isDraggingLeftHandle;
+    private boolean isDraggingRightHandle;
+    private boolean isDraggingSlidingRect;
+    private float lastXLeft;
+    private float lastXRight;
+    private float lastXSlidingRect;
 
     private boolean[] activeCharts;
 
@@ -133,6 +134,10 @@ public class TelegramChart extends View {
 
         indicatorCirclePaint.setColor(0xFFFFFFFF);
         indicatorCirclePaint.setStyle(Paint.Style.FILL);
+
+        indicatorLinePaint.setColor(0xFFDFE6EB);
+        indicatorLinePaint.setStyle(Paint.Style.STROKE);
+        indicatorLinePaint.setStrokeWidth(AndroidUtilities.dp(1));
 
     }
 
@@ -447,9 +452,7 @@ public class TelegramChart extends View {
                 canvas.drawPath(tooltipPath, paints[i]);
             }
 
-            backLinesPaint.setColor(0xFFDFE6EB);
-            backLinesPaint.setStrokeWidth(AndroidUtilities.dp(1));
-            canvas.drawPath(indicatorLinePath, backLinesPaint);
+            canvas.drawPath(indicatorLinePath, indicatorLinePaint);
 
             for (int i = 0; i < tooltipPaths.length; i++) {
                 Path tooltipPath = tooltipPaths[i];
