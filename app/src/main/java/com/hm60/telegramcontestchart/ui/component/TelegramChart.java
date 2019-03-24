@@ -95,8 +95,6 @@ public class TelegramChart extends View {
     private float lastXRight;
     private float lastXSlidingRect;
 
-    private Label[] xLabels;
-
 
     public TelegramChart(Context context) {
         super(context);
@@ -213,10 +211,10 @@ public class TelegramChart extends View {
         }
 
 
-        xLabels = new Label[xData.length];
+        chartData.labels = new Label[xData.length];
         for (int i = 0; i < xData.length; i++) {
-            Label label = new Label(0, 0, Utils.toShortDateString(xData[i]));
-            xLabels[i] = label;
+            Label label = new Label(Float.MAX_VALUE, 0, Utils.toShortDateString(xData[i]));
+            chartData.labels[i] = label;
         }
 
         regenerate = true;
@@ -336,8 +334,6 @@ public class TelegramChart extends View {
     }
 
 
-    private StaticLayout staticLayout;
-
     private void drawLargeSection(Canvas canvas) {
         int paddingBottom = getPaddingBottom();
         int paddingTop = getPaddingTop();
@@ -351,10 +347,9 @@ public class TelegramChart extends View {
         float right = getWidth() - AndroidUtilities.dp(16);
         float width = right - left;
 
-        for (Label xLabel : xLabels) {
+        for (Label xLabel : chartData.labels) {
             xLabel.y = bottom - AndroidUtilities.dp(25);
         }
-
 
         //xAxis
         backLinesPaint.setStrokeWidth(0);
@@ -387,12 +382,14 @@ public class TelegramChart extends View {
         float w1 = width;
         float win = slidingRect.width();
         float T = w0 * w1 / win;
+        float offsetX = (smallForegroundRect.right - slidingRect.right) * w1 / win;
 
         float xStep = (right - left - w1 + T) / (chartData.xDataOriginal.length - 1);
         chartData.xStep = xStep;
-
+        chartData.resetLabelsX();
 
         for (int i = 0; i < chartData.yDataNormalized.size(); i++) {
+
             boolean visible = chartData.visibles[i];
             if (!visible) {
                 continue;
@@ -402,7 +399,8 @@ public class TelegramChart extends View {
 
             for (int i1 = 0; i1 < yn.length; i1++) {
 
-                float x = -T + w1 + left + i1 * xStep + (smallForegroundRect.right - slidingRect.right) * w1 / win;
+                float x = -T + w1 + left + i1 * xStep + offsetX;
+                chartData.labels[i1].x = x;
 
                 if (x < -xStep) {
                     continue;
@@ -433,6 +431,18 @@ public class TelegramChart extends View {
             }
         }
 
+        //draw xLabels
+        float r = w1 / T;
+        int N = (int) (chartData.xDataOriginal.length * r);
+
+        textPaint.setColor(Color.LTGRAY);
+        for (int i = 0; i < chartData.labels.length; i++) {
+            Label label = chartData.labels[i];
+
+            float w = textPaint.measureText(label.text);
+
+            canvas.drawText(label.text, label.x - w , label.y, textPaint);
+        }
 
         if (showTooltip) {
             indicatorLinePath.reset();
@@ -440,10 +450,10 @@ public class TelegramChart extends View {
             for (Path tooltipPath : tooltipPaths) {
                 tooltipPath.reset();
             }
-            int index = Math.round((tooltipX + T - w1 - left - (smallForegroundRect.right - slidingRect.right) * w1 / win) / xStep);
+            int index = Math.round((tooltipX + T - w1 - left - offsetX) / xStep);
             if (index < 0) index = 0;
             if (index >= chartData.xDataOriginal.length) index = chartData.xDataOriginal.length - 1;
-            float x = -T + w1 + left + index * xStep + (smallForegroundRect.right - slidingRect.right) * w1 / win;
+            float x = -T + w1 + left + index * xStep + offsetX;
 
             indicatorLinePath.moveTo(x, bottom - AndroidUtilities.dp(40));
 
@@ -527,6 +537,7 @@ public class TelegramChart extends View {
 
     }
 
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -584,9 +595,9 @@ public class TelegramChart extends View {
                 break;
 
             case MotionEvent.ACTION_MOVE:
-                getParent().requestDisallowInterceptTouchEvent(true);
                 x = event.getX();
                 y = event.getY();
+
                 if (isDraggingLeftHandle) {
                     dragMode = DragMode.LeftHandle;
                     calcSlidingBound(x - lastXLeft);
@@ -612,9 +623,12 @@ public class TelegramChart extends View {
                     return true;
                 }
 
+
                 showTooltip = true;
                 tooltipX = x;
                 invalidate();
+
+                getParent().requestDisallowInterceptTouchEvent(true);
 
                 break;
 
@@ -821,5 +835,12 @@ public class TelegramChart extends View {
         long[] xDataOriginal;
         float[] xs;//x positions of data on screen
         boolean[] visibles;
+        Label[] labels;
+
+         void resetLabelsX() {
+             for (Label label : labels) {
+                 label.x = Float.MAX_VALUE;
+             }
+        }
     }
 }
