@@ -4,10 +4,12 @@
     <color name="colorPrimaryDark">#33506f</color>
     <color name="colorAccent">#D81B60</color>
 
+    <color name="chartBackgroundColor">#ffffffff</color>
     <color name="backgroundLineColor">#FFE8EAF6</color>
     <color name="xAxisColor">#B8B8B9</color>
     <color name="titleTextColor">#3894d4</color>
     <color name="tooltipBackColor">#FFFFFFFF</color>
     <color name="tooltipTitleTextColor">#FF222222</color>
+    <color name="blurColor">#A1F6F8FE</color>
 
 </resources>

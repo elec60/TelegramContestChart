@@ -15,13 +15,10 @@ import android.graphics.Region;
 import android.graphics.Typeface;
 import android.support.annotation.Keep;
 import android.support.annotation.Nullable;
-import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.hm60.telegramcontestchart.AndroidUtilities;
 import com.hm60.telegramcontestchart.R;
@@ -118,7 +115,7 @@ public class TelegramChart extends View {
         chartData = new ChartData();
 
         smallForegroundPaint.setStyle(Paint.Style.FILL);
-        smallForegroundPaint.setColor(0xA1F6F8FE);
+        smallForegroundPaint.setColor(getResources().getColor(R.color.blurColor));
 
         handlesPaint.setStyle(Paint.Style.FILL);
         handlesPaint.setColor(0x5ED3CACA);
@@ -225,7 +222,8 @@ public class TelegramChart extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        canvas.drawARGB(255, 255, 255, 255);
+
+        canvas.drawColor(getResources().getColor(R.color.chartBackgroundColor));
 
         drawSmallSection(canvas);
 
@@ -756,6 +754,9 @@ public class TelegramChart extends View {
             }
         }
 
+        if (maxValue[0] == Integer.MIN_VALUE) {
+            maxValue[0] = 0;
+        }
         if (lastMaxValue != maxValue[0]) {
             ValueAnimator valueAnimator = ValueAnimator.ofFloat(lastMaxValue, maxValue[0]);
             lastMaxValue = maxValue[0];
