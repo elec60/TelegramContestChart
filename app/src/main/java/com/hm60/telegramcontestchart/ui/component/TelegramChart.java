@@ -141,7 +141,7 @@ public class TelegramChart extends View {
 
         tooltipPaint.setStyle(Paint.Style.FILL);
         tooltipPaint.setColor(getResources().getColor(R.color.tooltipBackColor));
-        tooltipPaint.setShadowLayer(5f,0f, 2f, Color.GRAY);
+        tooltipPaint.setShadowLayer(5f, 0f, 2f, Color.GRAY);
 
     }
 
@@ -434,14 +434,23 @@ public class TelegramChart extends View {
         //draw xLabels
         float r = w1 / T;
         int N = (int) (chartData.xDataOriginal.length * r);
+        int iStep = N / 6;
+        textPaint.setTextSize(AndroidUtilities.dp(10));
 
         textPaint.setColor(Color.LTGRAY);
-        for (int i = 0; i < chartData.labels.length; i++) {
+        for (int i = 0; i < chartData.labels.length; i += iStep) {
             Label label = chartData.labels[i];
+
+            if ((label.x < -chartData.xStep)) {
+                continue;
+            }
+            if ((label.x > getWidth() + chartData.xStep)) {
+                break;
+            }
 
             float w = textPaint.measureText(label.text);
 
-            canvas.drawText(label.text, label.x - w , label.y, textPaint);
+            canvas.drawText(label.text, label.x - w, label.y, textPaint);
         }
 
         if (showTooltip) {
@@ -778,8 +787,8 @@ public class TelegramChart extends View {
 
 
             valueAnimator.start();
-        }else {
-           // normalizeByMax(maxValue[0]);
+        } else {
+            // normalizeByMax(maxValue[0]);
             postInvalidate();
         }
 
@@ -837,10 +846,10 @@ public class TelegramChart extends View {
         boolean[] visibles;
         Label[] labels;
 
-         void resetLabelsX() {
-             for (Label label : labels) {
-                 label.x = Float.MAX_VALUE;
-             }
+        void resetLabelsX() {
+            for (Label label : labels) {
+                label.x = Float.MAX_VALUE;
+            }
         }
     }
 }
