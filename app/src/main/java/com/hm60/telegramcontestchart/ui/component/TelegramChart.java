@@ -498,6 +498,12 @@ public class TelegramChart extends View {
             tooltipRect.right = tooltipRect.left + AndroidUtilities.dp(84);
             tooltipRect.bottom = tooltipRect.top + AndroidUtilities.dp(54);
 
+            float w = tooltipRect.width();
+            if (tooltipRect.right > getWidth()) {
+                tooltipRect.right = x + AndroidUtilities.dp(8);
+                tooltipRect.left = tooltipRect.right - w;
+            }
+
 
             canvas.drawRoundRect(tooltipRect, AndroidUtilities.dp(5), AndroidUtilities.dp(5), tooltipPaint);
 
@@ -509,7 +515,7 @@ public class TelegramChart extends View {
             textPaint.setColor(getResources().getColor(R.color.tooltipTitleTextColor));
             textPaint.setTextSize(AndroidUtilities.dp(12));
             float titleTextY = top + h + AndroidUtilities.dp(2);
-            float titleTextX = x - AndroidUtilities.dp(8);
+            float titleTextX = tooltipRect.left + AndroidUtilities.dp(8);
 
             canvas.drawText(dateOnTooltip,
                     titleTextX,
