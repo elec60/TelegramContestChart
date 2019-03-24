@@ -461,7 +461,7 @@ public class TelegramChart extends View {
         // TODO: 3/24/19 Tooltip size should be dynamic based on data
         if (showTooltip) {
             if (chartData.yDataOriginal.size() == 4) {
-                Toast.makeText(getContext(), "Unfortunately i was busy, so couldn't create dynamic Tooltip size and texts positions, but im able to create better one, animations have same excuse:)", Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), "Unfortunately i was busy, so couldn't create dynamic Tooltip size and texts positions, but im able to create better one, animations have same condition:)", Toast.LENGTH_LONG).show();
             }
             indicatorLinePath.reset();
 
