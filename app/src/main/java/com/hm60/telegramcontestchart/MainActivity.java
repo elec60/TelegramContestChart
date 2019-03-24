@@ -1,8 +1,10 @@
 package com.hm60.telegramcontestchart;
 
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.AppCompatCheckBox;
 import android.support.v7.widget.AppCompatTextView;
 import android.text.StaticLayout;
 import android.widget.CheckBox;
@@ -102,13 +104,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private CheckBox createCheckBox(int i1, String name, String color) {
-        final CheckBox cb = new CheckBox(this);
+    private AppCompatCheckBox createCheckBox(int i1, String name, String color) {
+        final AppCompatCheckBox cb = new AppCompatCheckBox(this);
         cb.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4));
         cb.setChecked(true);
         cb.setText(name);
-        cb.setHighlightColor(Color.parseColor(color));
+        cb.setSupportButtonTintList(new ColorStateList(new int[][]{new int[]{Color.parseColor(color)}}, new int[]{Color.parseColor(color)}));
         cb.setTag(i1);
+
         cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
