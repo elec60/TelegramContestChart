@@ -1,5 +1,6 @@
 package com.hm60.telegramcontestchart;
 
+import android.annotation.SuppressLint;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
@@ -8,6 +9,8 @@ import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.widget.AppCompatCheckBox;
 import android.support.v7.widget.AppCompatTextView;
 import android.text.StaticLayout;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
@@ -28,12 +31,11 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     TelegramChart chart;
+    boolean isNightMode = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
 
         setContentView(R.layout.activity_main);
 
@@ -105,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @SuppressLint("RestrictedApi")
     private AppCompatCheckBox createCheckBox(int i1, String name, String color) {
         final AppCompatCheckBox cb = new AppCompatCheckBox(this);
         cb.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4));
@@ -116,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
         cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                chart.setActiveChart((int)buttonView.getTag(), isChecked);
+                chart.setActiveChart((int) buttonView.getTag(), isChecked);
             }
         });
         return cb;
@@ -153,5 +156,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return jsonArray;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        if (item.getItemId() == R.id.nightMode) {
+            isNightMode = !isNightMode;
+            if (isNightMode) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            }else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            }
+
+            recreate();
+
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }

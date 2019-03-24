@@ -129,7 +129,7 @@ public class TelegramChart extends View {
         textPaint.setColor(0xFF84919A);
         textPaint.setTextSize(AndroidUtilities.dp(10));
 
-        indicatorCirclePaint.setColor(0xFFFFFFFF);
+        indicatorCirclePaint.setColor(getResources().getColor(R.color.chartBackgroundColor));
         indicatorCirclePaint.setStyle(Paint.Style.FILL);
 
         indicatorLinePaint.setColor(0xFFDFE6EB);
@@ -400,6 +400,11 @@ public class TelegramChart extends View {
                 float x = -T + w1 + left + i1 * xStep + offsetX;
                 chartData.labels[i1].x = x;
 
+                if (i1 == 0) {
+                    float y = top + (1 - yn[i1]) * (height - AndroidUtilities.dp(40));
+                    path.moveTo(x, y);
+                }
+
                 if (x < -xStep) {
                     continue;
                 }
@@ -412,11 +417,9 @@ public class TelegramChart extends View {
 
                 chartData.xs[i1] = x;
 
-                if (i1 == 0) {
-                    path.moveTo(x, y);
-                } else {
-                    path.lineTo(x, y);
-                }
+
+                path.lineTo(x, y);
+
             }
 
         }
