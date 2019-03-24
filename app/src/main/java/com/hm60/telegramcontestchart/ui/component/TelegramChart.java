@@ -19,6 +19,7 @@ import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import com.hm60.telegramcontestchart.AndroidUtilities;
 import com.hm60.telegramcontestchart.R;
@@ -126,7 +127,7 @@ public class TelegramChart extends View {
         backLinesPaint.setColor(getResources().getColor(R.color.xAxisColor));
         backLinesPaint.setStyle(Paint.Style.STROKE);
 
-        textPaint.setColor(0xFF84919A);
+        textPaint.setColor(getResources().getColor(R.color.textColor));
         textPaint.setTextSize(AndroidUtilities.dp(10));
 
         indicatorCirclePaint.setColor(getResources().getColor(R.color.chartBackgroundColor));
@@ -438,6 +439,7 @@ public class TelegramChart extends View {
         float r = w1 / T;
         int N = (int) (chartData.xDataOriginal.length * r);
         int iStep = N / 6;
+        textPaint.setColor(getResources().getColor(R.color.textColor));
         textPaint.setTextSize(AndroidUtilities.dp(10));
 
         textPaint.setColor(Color.LTGRAY);
@@ -456,7 +458,11 @@ public class TelegramChart extends View {
             canvas.drawText(label.text, label.x - w, label.y, textPaint);
         }
 
+        // TODO: 3/24/19 Tooltip size should be dynamic based on data
         if (showTooltip) {
+            if (chartData.yDataOriginal.size() == 4) {
+                Toast.makeText(getContext(), "Unfortunately i was busy, so couldn't create dynamic Tooltip size and texts positions, but im able to create better one, animations have same excuse:)", Toast.LENGTH_LONG).show();
+            }
             indicatorLinePath.reset();
 
             for (Path tooltipPath : tooltipPaths) {
@@ -536,13 +542,13 @@ public class TelegramChart extends View {
                     textPaint.setColor(paints[i].getColor());
                     textPaint.setTypeface(Typeface.DEFAULT_BOLD);
                     canvas.drawText(String.valueOf(count),
-                            titleTextX + n % 2 * AndroidUtilities.dp(40),
+                            titleTextX + n % 2 * AndroidUtilities.dp(42),
                             titleTextY + (float) Math.ceil((n + 1) / 2f) * AndroidUtilities.dp(20),
                             textPaint);
 
                     textPaint.setTypeface(null);
                     canvas.drawText(name,
-                            titleTextX + n % 2 * AndroidUtilities.dp(40),
+                            titleTextX + n % 2 * AndroidUtilities.dp(42),
                             titleTextY + (float) Math.ceil((n + 1) / 2f) * AndroidUtilities.dp(32),
                             textPaint);
 
@@ -579,6 +585,8 @@ public class TelegramChart extends View {
                     circlePoint.x = x;
                     circlePoint.y = y;
                     startCircleAnimation(false);
+                    getParent().requestDisallowInterceptTouchEvent(true);
+
                     return true;
                 }
 
@@ -591,6 +599,8 @@ public class TelegramChart extends View {
                     circlePoint.x = x;
                     circlePoint.y = y;
                     startCircleAnimation(false);
+                    getParent().requestDisallowInterceptTouchEvent(true);
+
                     return true;
                 }
 
@@ -602,6 +612,8 @@ public class TelegramChart extends View {
                     circlePoint.x = x;
                     circlePoint.y = y;
                     startCircleAnimation(false);
+                    getParent().requestDisallowInterceptTouchEvent(true);
+
                     return true;
                 }
 

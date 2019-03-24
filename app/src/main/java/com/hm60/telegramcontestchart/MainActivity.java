@@ -7,14 +7,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.widget.AppCompatCheckBox;
-import android.support.v7.widget.AppCompatTextView;
-import android.text.StaticLayout;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.CheckBox;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
-import android.widget.Toast;
+import android.widget.Spinner;
 
 import com.hm60.telegramcontestchart.ui.component.TelegramChart;
 import com.hm60.telegramcontestchart.util.PrefUtil;
@@ -32,7 +32,10 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     TelegramChart chart;
-    boolean isNightMode = false;
+    LinearLayout checkBoxesContainer;
+
+    private MenuItem mSpinnerItem1 = null;
+    CharSequence[] sequences = new CharSequence[5];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,78 +45,79 @@ public class MainActivity extends AppCompatActivity {
         boolean night = PrefUtil.getBoolean(R.string.preference_key_night_mode_enabled, false);
         if (night) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        }else {
+        } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         }
 
         setContentView(R.layout.activity_main);
 
-        LinearLayout container = findViewById(R.id.checkbox_container);
+        checkBoxesContainer = findViewById(R.id.checkbox_container);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Statistics");
         }
 
-
         chart = findViewById(R.id.chart);
 
-        JSONArray jsonArray = readJsonDataFromAssets("chart_data.json");
-
-        int chartsCount = jsonArray.length();
-        chartsCount = 1;
-
-        for (int i = 0; i < chartsCount; i++) {
-            try {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                JSONArray columnsJSONArray = jsonObject.getJSONArray("columns");
-                JSONObject namesJSONObject = jsonObject.getJSONObject("names");
-                JSONObject colorsJSONObject = jsonObject.getJSONObject("colors");
-                JSONObject typesJSONObject = jsonObject.getJSONObject("types");
-
-                int columnsCount = columnsJSONArray.length();
-                if (columnsCount == 0) {
-                    continue;
-                }
-
-                JSONArray xArray = columnsJSONArray.getJSONArray(0);
-                long[] xData = new long[xArray.length() - 1];
-                for (int i1 = 0; i1 < xData.length; i1++) {
-                    xData[i1] = xArray.getLong(i1 + 1);
-                }
-
-                List<Integer[]> yDataList = new ArrayList<>(columnsCount - 1);
-                String[] names = new String[columnsCount - 1];
-                String[] colors = new String[columnsCount - 1];
-                String[] types = new String[columnsCount - 1];
-                for (int i1 = 1; i1 < columnsCount; i1++) {
-                    JSONArray yArray = columnsJSONArray.getJSONArray(i1);
-                    String y = yArray.getString(0);
-                    names[i1 - 1] = namesJSONObject.getString(y);
-                    colors[i1 - 1] = colorsJSONObject.getString(y);
-                    types[i1 - 1] = typesJSONObject.getString(y);
-
-                    Integer[] yData = new Integer[yArray.length() - 1];
-
-                    for (int i2 = 0; i2 < yData.length; i2++) {
-                        yData[i2] = yArray.getInt(i2 + 1);
-                    }
-                    yDataList.add(yData);
-                }
-
-                chart.setData(yDataList, xData, names, colors, types, "Followers");
-
-                for (int i1 = 0; i1 < yDataList.size(); i1++) {
-                    String name = names[i1];
-                    String color = colors[i1];
-
-                    container.addView(createCheckBox(i1, name, color));
-                }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+        for (int i = 0; i < sequences.length; i++) {
+            sequences[i] = "Chart #" + (i + 1);
         }
 
+
+        setDataByIndex(0);
+
+    }
+
+    private void setDataByIndex(int index) {
+        JSONArray jsonArray = readJsonDataFromAssets("chart_data.json");
+
+        try {
+            JSONObject jsonObject = jsonArray.getJSONObject(index);
+            JSONArray columnsJSONArray = jsonObject.getJSONArray("columns");
+            JSONObject namesJSONObject = jsonObject.getJSONObject("names");
+            JSONObject colorsJSONObject = jsonObject.getJSONObject("colors");
+            JSONObject typesJSONObject = jsonObject.getJSONObject("types");
+
+            int columnsCount = columnsJSONArray.length();
+
+            JSONArray xArray = columnsJSONArray.getJSONArray(0);
+            long[] xData = new long[xArray.length() - 1];
+            for (int i1 = 0; i1 < xData.length; i1++) {
+                xData[i1] = xArray.getLong(i1 + 1);
+            }
+
+            List<Integer[]> yDataList = new ArrayList<>(columnsCount - 1);
+            String[] names = new String[columnsCount - 1];
+            String[] colors = new String[columnsCount - 1];
+            String[] types = new String[columnsCount - 1];
+            for (int i1 = 1; i1 < columnsCount; i1++) {
+                JSONArray yArray = columnsJSONArray.getJSONArray(i1);
+                String y = yArray.getString(0);
+                names[i1 - 1] = namesJSONObject.getString(y);
+                colors[i1 - 1] = colorsJSONObject.getString(y);
+                types[i1 - 1] = typesJSONObject.getString(y);
+
+                Integer[] yData = new Integer[yArray.length() - 1];
+
+                for (int i2 = 0; i2 < yData.length; i2++) {
+                    yData[i2] = yArray.getInt(i2 + 1);
+                }
+                yDataList.add(yData);
+            }
+
+            chart.setData(yDataList, xData, names, colors, types, "Followers");
+
+            checkBoxesContainer.removeAllViews();
+            for (int i1 = 0; i1 < yDataList.size(); i1++) {
+                String name = names[i1];
+                String color = colors[i1];
+
+                checkBoxesContainer.addView(createCheckBox(i1, name, color));
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     @SuppressLint("RestrictedApi")
@@ -170,8 +174,34 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
+        mSpinnerItem1 = menu.findItem(R.id.menu_spinner1);
+        View view1 = mSpinnerItem1.getActionView();
+        if (view1 instanceof Spinner) {
+            final Spinner spinner = (Spinner) view1;
 
-        return super.onCreateOptionsMenu(menu);
+
+            ArrayAdapter<CharSequence> adapter = new ArrayAdapter<>(this,
+                    android.R.layout.simple_spinner_item,
+                    sequences);
+
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+            spinner.setAdapter(adapter);
+
+            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    setDataByIndex(position);
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+
+                }
+            });
+        }
+
+        return true;
     }
 
     @Override

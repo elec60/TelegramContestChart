@@ -13,5 +13,6 @@
     <color name="blurColor">#A1F6F8FE</color>
     <color name="indicatorLineColor">#FFDFE6EB</color>
     <color name="shadowColor">#969696</color>
+    <color name="textColor">#FF84919A</color>
 
 </resources>
