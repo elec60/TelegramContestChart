@@ -10,5 +10,11 @@
     <color name="xAxisColor">#101924</color>
     <color name="titleTextColor">#3894d4</color>
     <color name="blurColor">#CB19232E</color>
+    <color name="indicatorLineColor">#ff121b24</color>
+    <color name="tooltipBackColor">#ff202b38</color>
+    <color name="tooltipTitleTextColor">#ffffffff</color>
+    <color name="shadowColor">#1a232e</color>
+
+
 
 </resources>

@@ -132,13 +132,15 @@ public class TelegramChart extends View {
         indicatorCirclePaint.setColor(getResources().getColor(R.color.chartBackgroundColor));
         indicatorCirclePaint.setStyle(Paint.Style.FILL);
 
-        indicatorLinePaint.setColor(0xFFDFE6EB);
+        indicatorLinePaint.setColor(getResources().getColor(R.color.indicatorLineColor));
         indicatorLinePaint.setStyle(Paint.Style.STROKE);
         indicatorLinePaint.setStrokeWidth(AndroidUtilities.dp(1));
 
         tooltipPaint.setStyle(Paint.Style.FILL);
         tooltipPaint.setColor(getResources().getColor(R.color.tooltipBackColor));
-        tooltipPaint.setShadowLayer(5f, 0f, 2f, Color.GRAY);
+        tooltipPaint.setShadowLayer(5f, 0f, 2f, getResources().getColor(R.color.shadowColor));
+
+        setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
     }
 

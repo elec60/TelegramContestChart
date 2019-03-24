@@ -2,4 +2,7 @@
     <string name="app_name">TelegramContestChart</string>
     <string name="followers">Followers</string>
     <string name="menu_title">Night Mode</string>
+
+    <string name="preference_key_night_mode_enabled">nightModeEnabled</string>
+
 </resources>

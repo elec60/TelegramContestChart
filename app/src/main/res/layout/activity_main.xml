@@ -11,6 +11,16 @@
         android:orientation="vertical"
         tools:context=".MainActivity">
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/followers"
+            android:paddingLeft="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="6dp"
+            android:textColor="@color/titleTextColor"
+            android:background="@color/chartBackgroundColor" />
+
         <com.hm60.telegramcontestchart.ui.component.TelegramChart
             android:id="@+id/chart"
             android:layout_width="match_parent"

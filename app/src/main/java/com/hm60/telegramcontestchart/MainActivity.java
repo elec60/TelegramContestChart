@@ -17,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.hm60.telegramcontestchart.ui.component.TelegramChart;
+import com.hm60.telegramcontestchart.util.PrefUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,6 +37,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+        boolean night = PrefUtil.getBoolean(R.string.preference_key_night_mode_enabled, false);
+        if (night) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        }else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        }
 
         setContentView(R.layout.activity_main);
 
@@ -169,12 +178,10 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
 
         if (item.getItemId() == R.id.nightMode) {
-            isNightMode = !isNightMode;
-            if (isNightMode) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-            }else {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-            }
+
+            boolean night = PrefUtil.getBoolean(R.string.preference_key_night_mode_enabled, false);
+            night = !night;
+            PrefUtil.setBoolean(R.string.preference_key_night_mode_enabled, night);
 
             recreate();
 
