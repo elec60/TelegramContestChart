@@ -1,8 +1,16 @@
 package com.hm60.telegramcontestchart;
 
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -10,6 +18,7 @@ import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
@@ -38,6 +47,8 @@ public class MainActivity extends Activity {
 
     private MenuItem mSpinnerItem1 = null;
     CharSequence[] sequences = new CharSequence[5];
+
+    private ValueAnimator colorAnimator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,7 +138,7 @@ public class MainActivity extends Activity {
         cb.setChecked(true);
         cb.setText(name);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            cb.setButtonTintList(ColorStateList.valueOf(-8355712));
+            cb.setButtonTintList(ColorStateList.valueOf(Color.parseColor(color)));
         }
         cb.setTag(i1);
 
@@ -176,6 +187,9 @@ public class MainActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
+        MenuItem toggleDarkMenuItem = menu.findItem(R.id.nightMode);
+        toggleDarkMenuItem.setIcon(new BitmapDrawable(getResources(), moonBitmap()));
+
         mSpinnerItem1 = menu.findItem(R.id.menu_spinner1);
         View view1 = mSpinnerItem1.getActionView();
         if (view1 instanceof Spinner) {
@@ -220,6 +234,44 @@ public class MainActivity extends Activity {
 
     private void toggleDarkMode() {
         this.isDark = !this.isDark;
+
+        float[] fArr = new float[2];
+        float f = 1.0f;
+        fArr[0] = isDark ? 1.0f : 0.0f;
+        if (isDark) {
+            f = 0.0f;
+        }
+        fArr[1] = f;
+
+        colorAnimator = ValueAnimator.ofFloat(fArr);
+        colorAnimator.setDuration(150);
+        colorAnimator.setInterpolator(new DecelerateInterpolator(2.0f));
+        colorAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                chart.applyTheme((Float) animation.getAnimatedValue());
+            }
+        });
+        colorAnimator.start();
+
         getWindow().setBackgroundDrawable(new ColorDrawable(this.isDark ? -15393241 : -986896));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(this.isDark ? -15064018 : -12426366);
+        }
+
+    }
+
+    private Bitmap moonBitmap() {
+        Bitmap bitmap = Bitmap.createBitmap(AndroidUtilities.dp(32), AndroidUtilities.dp(32), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(Color.WHITE);
+        canvas.drawCircle(bitmap.getWidth() * 0.5f, bitmap.getHeight() * 0.5f, bitmap.getWidth() * 0.28f, paint);
+
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OUT));
+        paint.setColor(Color.TRANSPARENT);
+        canvas.drawCircle(bitmap.getWidth() * 0.7f, bitmap.getHeight() * 0.34f, bitmap.getWidth() * 0.25f, paint);
+
+        return bitmap;
     }
 }

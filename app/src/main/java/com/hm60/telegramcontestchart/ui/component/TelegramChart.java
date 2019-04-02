@@ -21,12 +21,16 @@ import android.widget.Toast;
 
 import com.hm60.telegramcontestchart.AndroidUtilities;
 import com.hm60.telegramcontestchart.R;
+import com.hm60.telegramcontestchart.util.ColorUtil;
 import com.hm60.telegramcontestchart.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TelegramChart extends View {
+
+    private int color;
+
 
     private ChartData chartData;
 
@@ -142,6 +146,14 @@ public class TelegramChart extends View {
 
     }
 
+    public int getBackgroundColor() {
+        return this.color;
+    }
+
+    public void applyTheme(float f) {
+        this.color = ColorUtil.combineColors(Color.WHITE, -14866637, f);
+        invalidate();
+    }
 
     public void setData(List<Integer[]> yDataList, long[] xData, String[] names, String[] colors, String[] types, String title) {
         chartData.title = title;
@@ -223,7 +235,7 @@ public class TelegramChart extends View {
     @Override
     protected void onDraw(Canvas canvas) {
 
-        canvas.drawColor(getResources().getColor(R.color.chartBackgroundColor));
+        canvas.drawColor(color);
 
         drawSmallSection(canvas);
 
