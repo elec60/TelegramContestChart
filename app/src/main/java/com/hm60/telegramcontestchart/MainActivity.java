@@ -25,8 +25,10 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.hm60.telegramcontestchart.ui.component.TelegramChart;
+import com.hm60.telegramcontestchart.util.ColorUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,6 +38,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class MainActivity extends Activity {
@@ -44,30 +47,37 @@ public class MainActivity extends Activity {
 
     TelegramChart chart;
     LinearLayout checkBoxesContainer;
+    ArrayList<View> checkBoxesList = new ArrayList<>();
 
     private MenuItem mSpinnerItem1 = null;
     CharSequence[] sequences = new CharSequence[5];
 
     private ValueAnimator colorAnimator;
 
+    private TextView textViewTitle;
+
+    private final static int windowBackColorDark = 0xff151e27;
+    private final static int windowBackColorLight = 0xfff0f0f0;
+    private final static int actionBarBackColorLight = 0xff517da2;
+    private final static int actionBarBackColorDark = 0xff212d3b;
+    private final static int statusBarColorDark = 0xff1a242e;
+    private final static int statusBarColorLight = 0xff426382;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        getWindow().setBackgroundDrawable(new ColorDrawable(-986896));
+        getWindow().setBackgroundDrawable(new ColorDrawable(windowBackColorLight));
 
         if (getActionBar() != null) {
-            getActionBar().setBackgroundDrawable(new ColorDrawable(-11436638));
+            getActionBar().setBackgroundDrawable(new ColorDrawable(actionBarBackColorLight));
             getActionBar().setTitle(Html.fromHtml("<font color='#FFFFFF'>Statistics</font>"));
         }
 
         setContentView(R.layout.activity_main);
 
+        textViewTitle = findViewById(R.id.tvTitle);
         checkBoxesContainer = findViewById(R.id.checkbox_container);
-
-        if (getActionBar() != null) {
-            getActionBar().setTitle("Statistics");
-        }
 
         chart = findViewById(R.id.chart);
 
@@ -119,11 +129,14 @@ public class MainActivity extends Activity {
             chart.setData(yDataList, xData, names, colors, types, "Followers");
 
             checkBoxesContainer.removeAllViews();
+            checkBoxesList.clear();
             for (int i1 = 0; i1 < yDataList.size(); i1++) {
                 String name = names[i1];
                 String color = colors[i1];
 
-                checkBoxesContainer.addView(createCheckBox(i1, name, color));
+                CheckBox checkBox = createCheckBox(i1, name, color);
+                checkBoxesList.add(checkBox);
+                checkBoxesContainer.addView(checkBox);
             }
 
         } catch (JSONException e) {
@@ -244,20 +257,32 @@ public class MainActivity extends Activity {
         fArr[1] = f;
 
         colorAnimator = ValueAnimator.ofFloat(fArr);
-        colorAnimator.setDuration(150);
+        colorAnimator.setDuration(200);
         colorAnimator.setInterpolator(new DecelerateInterpolator(2.0f));
         colorAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                chart.applyTheme((Float) animation.getAnimatedValue());
+                Float value = (Float) animation.getAnimatedValue();
+
+                chart.applyTheme(value);
+                getWindow().setBackgroundDrawable(new ColorDrawable(ColorUtil.combineColors(windowBackColorLight, windowBackColorDark, value)));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    getWindow().setStatusBarColor(ColorUtil.combineColors(statusBarColorLight, statusBarColorDark, value));
+                }
+
+                if (getActionBar() != null) {
+                    getActionBar().setBackgroundDrawable(new ColorDrawable(ColorUtil.combineColors(actionBarBackColorLight, actionBarBackColorDark, value)));
+                }
+
+                checkBoxesContainer.setBackgroundColor(ColorUtil.combineColors(TelegramChart.chartColorLight, TelegramChart.chartColorDark, value));
+                textViewTitle.setBackgroundColor(ColorUtil.combineColors(TelegramChart.chartColorLight, TelegramChart.chartColorDark, value));
+
+                for (Object aCheckBoxesList : checkBoxesList) {
+                    ((CheckBox) aCheckBoxesList).setTextColor(ColorUtil.combineColors(Color.BLACK, Color.WHITE, value));
+                }
             }
         });
         colorAnimator.start();
-
-        getWindow().setBackgroundDrawable(new ColorDrawable(this.isDark ? -15393241 : -986896));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            getWindow().setStatusBarColor(this.isDark ? -15064018 : -12426366);
-        }
 
     }
 

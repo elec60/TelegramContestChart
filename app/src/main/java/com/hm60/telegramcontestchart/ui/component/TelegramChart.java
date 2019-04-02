@@ -77,6 +77,9 @@ public class TelegramChart extends View {
     private PointF circlePoint = new PointF();
 
     private float lastMaxValue;
+    public static final int chartColorDark = 0xff1d2733;
+    public static final int chartColorLight = 0xffffffff;
+
 
     public void setCircleRadius(float circleRadius) {
         if (this.circleRadius == circleRadius) {
@@ -150,8 +153,8 @@ public class TelegramChart extends View {
         return this.color;
     }
 
-    public void applyTheme(float f) {
-        this.color = ColorUtil.combineColors(Color.WHITE, -14866637, f);
+    public void applyTheme(float colorLightFactor) {
+        this.color = ColorUtil.combineColors(chartColorLight, chartColorDark, colorLightFactor);
         invalidate();
     }
 
