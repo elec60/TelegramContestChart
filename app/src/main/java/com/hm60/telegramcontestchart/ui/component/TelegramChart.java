@@ -13,8 +13,6 @@ import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Region;
 import android.graphics.Typeface;
-import android.support.annotation.Keep;
-import android.support.annotation.Nullable;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -76,7 +74,6 @@ public class TelegramChart extends View {
 
     private float lastMaxValue;
 
-    @Keep
     public void setCircleRadius(float circleRadius) {
         if (this.circleRadius == circleRadius) {
             return;
@@ -100,13 +97,13 @@ public class TelegramChart extends View {
         init();
     }
 
-    public TelegramChart(Context context, @Nullable AttributeSet attrs) {
+    public TelegramChart(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         init();
     }
 
-    public TelegramChart(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public TelegramChart(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
         init();

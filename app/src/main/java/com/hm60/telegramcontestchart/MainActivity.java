@@ -1,23 +1,23 @@
 package com.hm60.telegramcontestchart;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.res.ColorStateList;
-import android.graphics.Color;
-import android.support.v7.app.AppCompatActivity;
+import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatDelegate;
-import android.support.v7.widget.AppCompatCheckBox;
+import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 
 import com.hm60.telegramcontestchart.ui.component.TelegramChart;
-import com.hm60.telegramcontestchart.util.PrefUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,7 +29,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
+
+    boolean isDark = false;
 
     TelegramChart chart;
     LinearLayout checkBoxesContainer;
@@ -41,20 +43,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        getWindow().setBackgroundDrawable(new ColorDrawable(-986896));
 
-        boolean night = PrefUtil.getBoolean(R.string.preference_key_night_mode_enabled, false);
-        if (night) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        if (getActionBar() != null) {
+            getActionBar().setBackgroundDrawable(new ColorDrawable(-11436638));
+            getActionBar().setTitle(Html.fromHtml("<font color='#FFFFFF'>Statistics</font>"));
         }
 
         setContentView(R.layout.activity_main);
 
         checkBoxesContainer = findViewById(R.id.checkbox_container);
 
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("Statistics");
+        if (getActionBar() != null) {
+            getActionBar().setTitle("Statistics");
         }
 
         chart = findViewById(R.id.chart);
@@ -62,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < sequences.length; i++) {
             sequences[i] = "Chart #" + (i + 1);
         }
-
 
         setDataByIndex(0);
 
@@ -121,12 +121,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @SuppressLint("RestrictedApi")
-    private AppCompatCheckBox createCheckBox(int i1, String name, String color) {
-        final AppCompatCheckBox cb = new AppCompatCheckBox(this);
+    private CheckBox createCheckBox(int i1, String name, String color) {
+        final CheckBox cb = new CheckBox(this);
         cb.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4));
         cb.setChecked(true);
         cb.setText(name);
-        cb.setSupportButtonTintList(new ColorStateList(new int[][]{new int[]{Color.parseColor(color)}}, new int[]{Color.parseColor(color)}));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            cb.setButtonTintList(ColorStateList.valueOf(-8355712));
+        }
         cb.setTag(i1);
 
         cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -206,17 +208,18 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
-        if (item.getItemId() == R.id.nightMode) {
-
-            boolean night = PrefUtil.getBoolean(R.string.preference_key_night_mode_enabled, false);
-            night = !night;
-            PrefUtil.setBoolean(R.string.preference_key_night_mode_enabled, night);
-
-            recreate();
-
+        if (item.getItemId() != R.id.nightMode) {
+            return super.onOptionsItemSelected(item);
         }
 
-        return super.onOptionsItemSelected(item);
+        toggleDarkMode();
+
+        return true;
+
+    }
+
+    private void toggleDarkMode() {
+        this.isDark = !this.isDark;
+        getWindow().setBackgroundDrawable(new ColorDrawable(this.isDark ? -15393241 : -986896));
     }
 }

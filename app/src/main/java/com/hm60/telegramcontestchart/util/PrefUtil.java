@@ -4,13 +4,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.preference.PreferenceManager;
-import android.support.annotation.StringRes;
 
 import com.ApplicationLoader;
 
 public final class PrefUtil {
 
-    public static boolean getBoolean(@StringRes int id, boolean defaultValue) {
+    public static boolean getBoolean(int id, boolean defaultValue) {
         return getBoolean(getKey(id), defaultValue);
     }
 
@@ -18,7 +17,7 @@ public final class PrefUtil {
         return getPreferences().getBoolean(key, defaultValue);
     }
 
-    public static String getKey(@StringRes int id, Object... formatArgs) {
+    public static String getKey(int id, Object... formatArgs) {
         return getResources().getString(id, formatArgs);
     }
 
@@ -34,7 +33,7 @@ public final class PrefUtil {
         return PreferenceManager.getDefaultSharedPreferences(getContext());
     }
 
-    public static void setBoolean(@StringRes int id, boolean value) {
+    public static void setBoolean(int id, boolean value) {
         setBoolean(getKey(id), value);
     }
 
