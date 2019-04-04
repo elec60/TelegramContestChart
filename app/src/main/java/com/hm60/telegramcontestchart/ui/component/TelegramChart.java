@@ -1,7 +1,6 @@
 package com.hm60.telegramcontestchart.ui.component;
 
 import android.animation.Animator;
-import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -9,7 +8,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Region;
 import android.graphics.Typeface;
@@ -29,8 +27,22 @@ import java.util.List;
 
 public class TelegramChart extends View {
 
-    private int color;
+    public static final int chartColorDark = 0xff1d2733;
+    public static final int chartColorLight = 0xffffffff;
+    private int color = chartColorLight;
 
+
+    private static final int gridLineColorLight = 0xfff3f3f3;
+    private static final int gridLineColorDark = 0xff182122;
+
+    private static final int gridTextColorLight = 0xffa0abb2;
+    private static final int gridTextColorDark = 0xff4d5f6e;
+
+    private static final int selectedCircleFillColorLight = 0xffffffff;
+    private static final int selectedCircleFillColorDark = 0xff1d2733;
+
+    private static final int infoBoxColorLight = 0xffffffff;
+    private static final int infoBoxColorDark = 0xff202b38;
 
     private ChartData chartData;
 
@@ -38,13 +50,13 @@ public class TelegramChart extends View {
     private float slidingRectRatio = 0.25f;// 0.25 of progress section width
     private float slidingRectMinWith = AndroidUtilities.dp(20);
 
-    private Paint backLinesPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint gridLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-    private Paint circlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint selectedCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-    private boolean showTooltip;
-    private float tooltipX;
-    private Path[] tooltipPaths;
+    private boolean showInfoBox;
+    private float InfoBoxX;
+    private Path[] infoBoxPaths;
     private Paint indicatorCirclePaint = new Paint();
     private Paint indicatorLinePaint = new Paint();
     private Path indicatorLinePath = new Path();
@@ -71,24 +83,7 @@ public class TelegramChart extends View {
     private RectF leftHandle = new RectF();
     private RectF rightHandle = new RectF();
 
-    private ObjectAnimator circleRadiusAnimator;
-
-    private float circleRadius;
-    private PointF circlePoint = new PointF();
-
     private float lastMaxValue;
-    public static final int chartColorDark = 0xff1d2733;
-    public static final int chartColorLight = 0xffffffff;
-
-
-    public void setCircleRadius(float circleRadius) {
-        if (this.circleRadius == circleRadius) {
-            return;
-        }
-
-        this.circleRadius = circleRadius;
-        invalidate();
-    }
 
     private boolean isDraggingLeftHandle;
     private boolean isDraggingRightHandle;
@@ -116,6 +111,11 @@ public class TelegramChart extends View {
         init();
     }
 
+    private static float getTextHeight(Paint paint) {
+        Paint.FontMetrics fontMetrics = paint.getFontMetrics();
+        return fontMetrics.descent - fontMetrics.ascent;
+    }
+
     private void init() {
         chartData = new ChartData();
 
@@ -125,11 +125,11 @@ public class TelegramChart extends View {
         handlesPaint.setStyle(Paint.Style.FILL);
         handlesPaint.setColor(0x5ED3CACA);
 
-        circlePaint.setStyle(Paint.Style.FILL);
-        circlePaint.setColor(0x88ECECF5);
+        selectedCirclePaint.setStyle(Paint.Style.FILL);
+        selectedCirclePaint.setColor(0x88ECECF5);
 
-        backLinesPaint.setColor(getResources().getColor(R.color.xAxisColor));
-        backLinesPaint.setStyle(Paint.Style.STROKE);
+        gridLinePaint.setColor(getResources().getColor(R.color.xAxisColor));
+        gridLinePaint.setStyle(Paint.Style.STROKE);
 
         textPaint.setColor(getResources().getColor(R.color.textColor));
         textPaint.setTextSize(AndroidUtilities.dp(10));
@@ -192,9 +192,9 @@ public class TelegramChart extends View {
             pathsSmall[i] = new Path();
         }
 
-        tooltipPaths = new Path[yDataList.size()];
-        for (int i = 0; i < tooltipPaths.length; i++) {
-            tooltipPaths[i] = new Path();
+        infoBoxPaths = new Path[yDataList.size()];
+        for (int i = 0; i < infoBoxPaths.length; i++) {
+            infoBoxPaths[i] = new Path();
         }
 
         int maxValue = Integer.MIN_VALUE;
@@ -335,8 +335,6 @@ public class TelegramChart extends View {
         canvas.drawRect(leftHandle, handlesPaint);
         canvas.drawRect(rightHandle, handlesPaint);
 
-        canvas.drawCircle(circlePoint.x, circlePoint.y, circleRadius, circlePaint);
-
         canvas.save();
         canvas.clipRect(slidingRect, Region.Op.DIFFERENCE);
 
@@ -365,16 +363,16 @@ public class TelegramChart extends View {
         }
 
         //xAxis
-        backLinesPaint.setStrokeWidth(0);
-        backLinesPaint.setColor(getResources().getColor(R.color.xAxisColor));
+        gridLinePaint.setStrokeWidth(0);
+        gridLinePaint.setColor(getResources().getColor(R.color.xAxisColor));
         canvas.drawLine(left,
                 bottom - AndroidUtilities.dp(40),
                 right,
                 bottom - AndroidUtilities.dp(40),
-                backLinesPaint);
+                gridLinePaint);
 
         //background lines
-        backLinesPaint.setColor(getResources().getColor(R.color.backgroundLineColor));
+        gridLinePaint.setColor(getResources().getColor(R.color.backgroundLineColor));
 
         for (int i = 1; i <= 5; i++) {
             int y = (int) (bottom - smallSectionHeight - height / 6 * i);
@@ -383,7 +381,7 @@ public class TelegramChart extends View {
                     y,
                     right,
                     y,
-                    backLinesPaint);
+                    gridLinePaint);
         }
 
 
@@ -471,16 +469,16 @@ public class TelegramChart extends View {
         }
 
         // TODO: 3/24/19 Tooltip size should be dynamic based on data
-        if (showTooltip) {
+        if (showInfoBox) {
             if (chartData.yDataOriginal.size() == 4) {
                 Toast.makeText(getContext(), "Unfortunately i was busy, so couldn't create dynamic Tooltip size and texts positions, but im able to create better one, animations have same condition:)", Toast.LENGTH_LONG).show();
             }
             indicatorLinePath.reset();
 
-            for (Path tooltipPath : tooltipPaths) {
+            for (Path tooltipPath : infoBoxPaths) {
                 tooltipPath.reset();
             }
-            int index = Math.round((tooltipX + T - w1 - left - offsetX) / xStep);
+            int index = Math.round((InfoBoxX + T - w1 - left - offsetX) / xStep);
             if (index < 0) index = 0;
             if (index >= chartData.xDataOriginal.length) index = chartData.xDataOriginal.length - 1;
             float x = -T + w1 + left + index * xStep + offsetX;
@@ -491,16 +489,16 @@ public class TelegramChart extends View {
                 boolean visible = chartData.visibles[i];
                 if (visible) {
                     float y = top + (1 - chartData.yDataNormalized.get(i)[index]) * (height - AndroidUtilities.dp(40));
-                    Path tooltipPath = tooltipPaths[i];
+                    Path tooltipPath = infoBoxPaths[i];
                     tooltipPath.addCircle(x, y, AndroidUtilities.dp(4), Path.Direction.CW);
                 }
             }
 
             indicatorLinePath.lineTo(x, paddingTop);
 
-            for (int i = 0; i < tooltipPaths.length; i++) {
+            for (int i = 0; i < infoBoxPaths.length; i++) {
 
-                Path tooltipPath = tooltipPaths[i];
+                Path tooltipPath = infoBoxPaths[i];
 
                 canvas.drawPath(tooltipPath, indicatorCirclePaint);
                 canvas.drawPath(tooltipPath, paints[i]);
@@ -508,8 +506,8 @@ public class TelegramChart extends View {
 
             canvas.drawPath(indicatorLinePath, indicatorLinePaint);
 
-            for (int i = 0; i < tooltipPaths.length; i++) {
-                Path tooltipPath = tooltipPaths[i];
+            for (int i = 0; i < infoBoxPaths.length; i++) {
+                Path tooltipPath = infoBoxPaths[i];
                 canvas.drawPath(tooltipPath, indicatorCirclePaint);
                 canvas.drawPath(tooltipPath, paints[i]);
             }
@@ -594,9 +592,6 @@ public class TelegramChart extends View {
                     isDraggingRightHandle = false;
                     isDraggingSlidingRect = false;
                     lastXLeft = x;
-                    circlePoint.x = x;
-                    circlePoint.y = y;
-                    startCircleAnimation(false);
                     getParent().requestDisallowInterceptTouchEvent(true);
 
                     return true;
@@ -608,9 +603,6 @@ public class TelegramChart extends View {
                     isDraggingRightHandle = true;
                     isDraggingSlidingRect = false;
                     lastXRight = x;
-                    circlePoint.x = x;
-                    circlePoint.y = y;
-                    startCircleAnimation(false);
                     getParent().requestDisallowInterceptTouchEvent(true);
 
                     return true;
@@ -621,16 +613,13 @@ public class TelegramChart extends View {
                     isDraggingRightHandle = false;
                     isDraggingSlidingRect = true;
                     lastXSlidingRect = x;
-                    circlePoint.x = x;
-                    circlePoint.y = y;
-                    startCircleAnimation(false);
                     getParent().requestDisallowInterceptTouchEvent(true);
 
                     return true;
                 }
 
-                showTooltip = true;
-                tooltipX = x;
+                showInfoBox = true;
+                InfoBoxX = x;
 
                 invalidate();
 
@@ -666,8 +655,8 @@ public class TelegramChart extends View {
                 }
 
 
-                showTooltip = true;
-                tooltipX = x;
+                showInfoBox = true;
+                InfoBoxX = x;
                 invalidate();
 
                 getParent().requestDisallowInterceptTouchEvent(true);
@@ -675,16 +664,13 @@ public class TelegramChart extends View {
                 break;
 
             case MotionEvent.ACTION_UP:
-                if (isDraggingSlidingRect || isDraggingRightHandle || isDraggingLeftHandle) {
-                    startCircleAnimation(true);
-                }
                 isDraggingLeftHandle = false;
                 isDraggingRightHandle = false;
                 isDraggingSlidingRect = false;
                 lastXLeft = 0;
                 lastXRight = 0;
                 lastXSlidingRect = 0;
-                showTooltip = false;
+                showInfoBox = false;
                 invalidate();
                 break;
         }
@@ -698,28 +684,22 @@ public class TelegramChart extends View {
         switch (dragMode) {
             case LeftHandle:
                 slidingRect.left += diffX;
-                circlePoint.x += diffX;
                 if (slidingRect.left < smallForegroundRect.left) {
                     slidingRect.left = smallForegroundRect.left;
-                    circlePoint.x = leftHandle.centerX();
                 }
                 if (diffX > 0 && slidingRect.width() <= slidingRectMinWith) {
                     slidingRect.left = slidingRect.right - slidingRectMinWith;
-                    circlePoint.x = leftHandle.centerX();
                 }
                 break;
             case RightHandle:
                 slidingRect.right += diffX;
-                circlePoint.x += diffX;
                 if (slidingRect.right > smallForegroundRect.right) {
                     slidingRect.right = smallForegroundRect.right;
-                    circlePoint.x = rightHandle.centerX();
                     break;
                 }
 
                 if (diffX < 0 && slidingRect.width() < slidingRectMinWith) {
                     slidingRect.right = slidingRect.left + slidingRectMinWith;
-                    circlePoint.x = rightHandle.centerX();
                     break;
                 }
 
@@ -738,7 +718,6 @@ public class TelegramChart extends View {
                     slidingRect.left = slidingRect.right - w;
                     break;
                 }
-                circlePoint.x += diffX;
                 break;
         }
 
@@ -750,19 +729,6 @@ public class TelegramChart extends View {
 
     }
 
-
-    private void startCircleAnimation(boolean revers) {
-        if (circleRadiusAnimator == null) {
-            circleRadiusAnimator = ObjectAnimator.ofFloat(this, "circleRadius", 0, smallForegroundRect.height() / 2 * 1.8f);
-            circleRadiusAnimator.setDuration(200);
-        }
-
-        if (revers) {
-            circleRadiusAnimator.reverse();
-        } else {
-            circleRadiusAnimator.start();
-        }
-    }
 
     private DragMode dragMode = DragMode.Both;
 
