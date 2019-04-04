@@ -10,12 +10,10 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.Region;
-import android.graphics.Typeface;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 
 import com.hm60.telegramcontestchart.AndroidUtilities;
 import com.hm60.telegramcontestchart.R;
@@ -47,8 +45,8 @@ public class TelegramChart extends View {
     private ChartData chartData;
 
     private float ratio = 11f;
-    private float slidingRectRatio = 0.25f;// 0.25 of progress section width
-    private float slidingRectMinWith = AndroidUtilities.dp(20);
+    private float slidingRectInitialRatio = 1.0f;
+    private float slidingRectMinWith = AndroidUtilities.dp(50);
 
     private Paint gridLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
@@ -262,7 +260,7 @@ public class TelegramChart extends View {
             slidingRect.top = top;
             slidingRect.bottom = bottom;
             slidingRect.right = right;
-            slidingRect.left = slidingRect.right - width * slidingRectRatio;
+            slidingRect.left = slidingRect.right - width * slidingRectInitialRatio;
 
             leftHandle.left = slidingRect.left;
             leftHandle.top = top + AndroidUtilities.dp(1);
@@ -389,13 +387,13 @@ public class TelegramChart extends View {
             path.reset();
         }
 
-        float w0 = smallForegroundRect.width();
-        float w1 = width;
-        float win = slidingRect.width();
-        float T = w0 * w1 / win;
-        float offsetX = (smallForegroundRect.right - slidingRect.right) * w1 / win;
+        float b = width;
+        float a = slidingRect.width();
+        float T = b * b / a;
+        float f = (leftHandle.left - left);
+        float L = f * b / a;
 
-        float xStep = (right - left - w1 + T) / (chartData.xDataOriginal.length - 1);
+        float xStep = b * b / (a * (chartData.xDataOriginal.length - 1));
         chartData.xStep = xStep;
         chartData.resetLabelsX();
 
@@ -410,7 +408,8 @@ public class TelegramChart extends View {
 
             for (int i1 = 0; i1 < yn.length; i1++) {
 
-                float x = -T + w1 + left + i1 * xStep + offsetX;
+                //float x = -T + b + left + i1 * xStep + offsetX;
+                float x = -L + left + i1 * xStep;
                 chartData.labels[i1].x = x;
 
                 if (i1 == 0) {
@@ -446,7 +445,7 @@ public class TelegramChart extends View {
         }
 
         //draw xLabels
-        float r = w1 / T;
+        float r = b / T;
         int N = (int) (chartData.xDataOriginal.length * r);
         int iStep = N / 6;
         textPaint.setColor(getResources().getColor(R.color.textColor));
@@ -468,106 +467,6 @@ public class TelegramChart extends View {
             canvas.drawText(label.text, label.x - w, label.y, textPaint);
         }
 
-        // TODO: 3/24/19 Tooltip size should be dynamic based on data
-        if (showInfoBox) {
-            if (chartData.yDataOriginal.size() == 4) {
-                Toast.makeText(getContext(), "Unfortunately i was busy, so couldn't create dynamic Tooltip size and texts positions, but im able to create better one, animations have same condition:)", Toast.LENGTH_LONG).show();
-            }
-            indicatorLinePath.reset();
-
-            for (Path tooltipPath : infoBoxPaths) {
-                tooltipPath.reset();
-            }
-            int index = Math.round((InfoBoxX + T - w1 - left - offsetX) / xStep);
-            if (index < 0) index = 0;
-            if (index >= chartData.xDataOriginal.length) index = chartData.xDataOriginal.length - 1;
-            float x = -T + w1 + left + index * xStep + offsetX;
-
-            indicatorLinePath.moveTo(x, bottom - AndroidUtilities.dp(40));
-
-            for (int i = 0; i < chartData.yDataOriginal.size(); i++) {
-                boolean visible = chartData.visibles[i];
-                if (visible) {
-                    float y = top + (1 - chartData.yDataNormalized.get(i)[index]) * (height - AndroidUtilities.dp(40));
-                    Path tooltipPath = infoBoxPaths[i];
-                    tooltipPath.addCircle(x, y, AndroidUtilities.dp(4), Path.Direction.CW);
-                }
-            }
-
-            indicatorLinePath.lineTo(x, paddingTop);
-
-            for (int i = 0; i < infoBoxPaths.length; i++) {
-
-                Path tooltipPath = infoBoxPaths[i];
-
-                canvas.drawPath(tooltipPath, indicatorCirclePaint);
-                canvas.drawPath(tooltipPath, paints[i]);
-            }
-
-            canvas.drawPath(indicatorLinePath, indicatorLinePaint);
-
-            for (int i = 0; i < infoBoxPaths.length; i++) {
-                Path tooltipPath = infoBoxPaths[i];
-                canvas.drawPath(tooltipPath, indicatorCirclePaint);
-                canvas.drawPath(tooltipPath, paints[i]);
-            }
-
-            tooltipRect.left = x - AndroidUtilities.dp(14);
-            tooltipRect.top = top;
-            tooltipRect.right = tooltipRect.left + AndroidUtilities.dp(84);
-            tooltipRect.bottom = tooltipRect.top + AndroidUtilities.dp(54);
-
-            float w = tooltipRect.width();
-            if (tooltipRect.right > getWidth()) {
-                tooltipRect.right = x + AndroidUtilities.dp(8);
-                tooltipRect.left = tooltipRect.right - w;
-            }
-
-
-            canvas.drawRoundRect(tooltipRect, AndroidUtilities.dp(5), AndroidUtilities.dp(5), tooltipPaint);
-
-            long millis = chartData.xDataOriginal[index];
-            String dateOnTooltip = Utils.toShortDateString2(millis);
-            textPaint.measureText(dateOnTooltip);
-            float h = textPaint.descent() - textPaint.ascent();
-
-            textPaint.setColor(getResources().getColor(R.color.tooltipTitleTextColor));
-            textPaint.setTextSize(AndroidUtilities.dp(12));
-            float titleTextY = top + h + AndroidUtilities.dp(2);
-            float titleTextX = tooltipRect.left + AndroidUtilities.dp(8);
-
-            canvas.drawText(dateOnTooltip,
-                    titleTextX,
-                    titleTextY,
-                    textPaint);
-
-            int n = 0;
-            for (int i = 0; i < chartData.yDataOriginal.size(); i++) {
-                boolean visible = chartData.visibles[i];
-
-                if (visible) {
-                    int count = chartData.yDataOriginal.get(i)[index];
-                    String name = chartData.names[i];
-
-                    textPaint.setColor(paints[i].getColor());
-                    textPaint.setTypeface(Typeface.DEFAULT_BOLD);
-                    canvas.drawText(String.valueOf(count),
-                            titleTextX + n % 2 * AndroidUtilities.dp(42),
-                            titleTextY + (float) Math.ceil((n + 1) / 2f) * AndroidUtilities.dp(20),
-                            textPaint);
-
-                    textPaint.setTypeface(null);
-                    canvas.drawText(name,
-                            titleTextX + n % 2 * AndroidUtilities.dp(42),
-                            titleTextY + (float) Math.ceil((n + 1) / 2f) * AndroidUtilities.dp(32),
-                            textPaint);
-
-                    n++;
-                }
-            }
-
-
-        }
 
     }
 
