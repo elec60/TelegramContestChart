@@ -1,6 +1,7 @@
 package com.hm60.telegramcontestchart.ui.component;
 
 import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -244,6 +245,12 @@ public class TelegramChart extends View {
     }
 
 
+    int maxOfMaxInVisibleSection = Integer.MIN_VALUE;
+    int lastMax = -1;
+    float maxOfMaxAnimatedValue = 1;
+    ValueAnimator maxValueAnimator;
+
+
     private void drawSmallSection(Canvas canvas) {
 
         int paddingBottom = getPaddingBottom();
@@ -276,7 +283,7 @@ public class TelegramChart extends View {
         }
 
         if (regenerate) {
-            regenerate = false;
+            //regenerate = false;
 
             smallForegroundRect.left = left;
             smallForegroundRect.top = top;
@@ -287,6 +294,7 @@ public class TelegramChart extends View {
                 path.reset();
             }
 
+            maxOfMaxInVisibleSection = Integer.MIN_VALUE;
             for (int i = 0; i < chartData.yDataNormalized.size(); i++) {
                 boolean visible = chartData.visibles[i];
                 if (visible) {
@@ -300,10 +308,41 @@ public class TelegramChart extends View {
                         float y = top + (1 - yn[i1]) * height;
                         float x = left + (float) i1 * width / (yn.length - 1);
 
+                        if (x >= slidingRect.left && x <= slidingRect.right){
+                            if (chartData.yDataOriginal.get(i)[i1] > maxOfMaxInVisibleSection) {
+                                maxOfMaxInVisibleSection = chartData.yDataOriginal.get(i)[i1];
+                            }
+                        }
+
                         path.lineTo(x, y);
                     }
                 }
 
+            }
+
+            if (lastMax == -1) {
+                lastMax = maxOfMaxInVisibleSection;
+                maxOfMaxAnimatedValue = maxOfMaxInVisibleSection;
+            }
+
+            if (lastMax != maxOfMaxInVisibleSection) {
+                maxValueAnimator = ValueAnimator.ofFloat(lastMax, maxOfMaxInVisibleSection);
+                maxValueAnimator.setDuration(125);
+                maxValueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animation) {
+                        maxOfMaxAnimatedValue = (float) animation.getAnimatedValue();
+                        invalidate();
+                    }
+                });
+                maxValueAnimator.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        lastMax = maxOfMaxInVisibleSection;
+                    }
+                });
+                maxValueAnimator.start();
             }
         }
 
@@ -341,7 +380,6 @@ public class TelegramChart extends View {
         canvas.restore();
 
     }
-
 
     private void drawLargeSection(Canvas canvas) {
         int paddingBottom = getPaddingBottom();
@@ -397,23 +435,22 @@ public class TelegramChart extends View {
         chartData.xStep = xStep;
         chartData.resetLabelsX();
 
-        for (int i = 0; i < chartData.yDataNormalized.size(); i++) {
+        for (int i = 0; i < chartData.yDataOriginal.size(); i++) {
 
             boolean visible = chartData.visibles[i];
             if (!visible) {
                 continue;
             }
-            Float[] yn = chartData.yDataNormalized.get(i);
+            Integer[] yn = chartData.yDataOriginal.get(i);
             Path path = paths[i];
 
             for (int i1 = 0; i1 < yn.length; i1++) {
 
-                //float x = -T + b + left + i1 * xStep + offsetX;
                 float x = -L + left + i1 * xStep;
                 chartData.labels[i1].x = x;
 
                 if (i1 == 0) {
-                    float y = top + (1 - yn[i1]) * (height - AndroidUtilities.dp(40));
+                    float y = top + (1 - yn[i1]/maxOfMaxAnimatedValue) * (height - AndroidUtilities.dp(40));
                     path.moveTo(x, y);
                 }
 
@@ -425,7 +462,7 @@ public class TelegramChart extends View {
                     break;
                 }
 
-                float y = top + (1 - yn[i1]) * (height - AndroidUtilities.dp(40));
+                float y = top + (1 - yn[i1]/maxOfMaxAnimatedValue) * (height - AndroidUtilities.dp(40));
 
                 chartData.xs[i1] = x;
 
@@ -633,86 +670,7 @@ public class TelegramChart extends View {
 
     public void setActiveChart(int index, boolean isChecked) {
         chartData.visibles[index] = isChecked;
-        reNormalizeDataWithAnimation();
-    }
-
-    private void reNormalizeDataWithAnimation() {
-
-        final float[] maxValue = {Integer.MIN_VALUE};
-        for (int i = 0; i < chartData.yDataOriginal.size(); i++) {
-            if (chartData.visibles[i]) {
-                Integer[] ys = chartData.yDataOriginal.get(i);
-                for (Integer y : ys) {
-                    if (y > maxValue[0]) maxValue[0] = y;
-                }
-            }
-        }
-
-        if (maxValue[0] == Integer.MIN_VALUE) {
-            maxValue[0] = 0;
-        }
-        if (lastMaxValue != maxValue[0]) {
-            ValueAnimator valueAnimator = ValueAnimator.ofFloat(lastMaxValue, maxValue[0]);
-            lastMaxValue = maxValue[0];
-            valueAnimator.setDuration(400);
-            valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    maxValue[0] = (float) animation.getAnimatedValue();
-
-                    normalizeByMax(maxValue[0]);
-                }
-            });
-
-            valueAnimator.addListener(new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationStart(Animator animation) {
-
-                }
-
-                @Override
-                public void onAnimationEnd(Animator animation) {
-
-                }
-
-                @Override
-                public void onAnimationCancel(Animator animation) {
-
-                }
-
-                @Override
-                public void onAnimationRepeat(Animator animation) {
-
-                }
-            });
-
-
-            valueAnimator.start();
-        } else {
-            // normalizeByMax(maxValue[0]);
-            postInvalidate();
-        }
-
-
-    }
-
-    private void normalizeByMax(float v) {
-        chartData.yDataNormalized.clear();
-
-        for (int i1 = 0; i1 < chartData.yDataOriginal.size(); i1++) {
-
-            Integer[] ys = chartData.yDataOriginal.get(i1);
-            Float[] yNormalized = new Float[ys.length];
-            for (int i = 0; i < ys.length; i++) {
-
-                float f = (float) (ys[i]) / v;
-                yNormalized[i] = f;
-            }
-            chartData.yDataNormalized.add(yNormalized);
-        }
-
-        regenerate = true;
-        invalidate();
+       invalidate();
     }
 
     enum DragMode {
