@@ -13,8 +13,10 @@ import android.graphics.RectF;
 import android.graphics.Region;
 import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import com.hm60.telegramcontestchart.AndroidUtilities;
 import com.hm60.telegramcontestchart.R;
@@ -45,9 +47,9 @@ public class TelegramChart extends View {
 
     private ChartData chartData;
 
-    private float ratio = 11f;
-    private float slidingRectInitialRatio = 1.0f;
-    private float slidingRectMinWith = AndroidUtilities.dp(50);
+    private static float ratio = 11f;
+    private static float slidingRectInitialRatio = 1.0f;
+    private static float slidingRectMinWith = AndroidUtilities.dp(50);
 
     private Paint gridLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
@@ -145,6 +147,40 @@ public class TelegramChart extends View {
         tooltipPaint.setShadowLayer(5f, 0f, 2f, getResources().getColor(R.color.shadowColor));
 
         setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+
+        maxValueAnimator = ValueAnimator.ofFloat(0f, 1f);
+        maxValueAnimator.setDuration(10000);
+        maxValueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float animatedValue = (float) animation.getAnimatedValue();
+                maxOfMaxAnimatedValue = lastMax + animatedValue * (maxOfMaxAtVisibleSection - lastMax);
+                if (indexToToggle != -1) {
+                    paints[indexToToggle].setAlpha((int) (animatedValue * 255));
+                }
+                invalidate();
+
+                Log.d("value", String.valueOf(maxOfMaxAnimatedValue));
+            }
+        });
+        maxValueAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                //lastMax = maxOfMaxAtVisibleSection;
+                //hideInvisible = true;
+                //invalidate();
+
+                Toast.makeText(getContext(), "onAnimationEnd", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                super.onAnimationCancel(animation);
+                Toast.makeText(getContext(), "onAnimationCancel", Toast.LENGTH_SHORT).show();
+
+            }
+        });
 
     }
 
@@ -245,7 +281,7 @@ public class TelegramChart extends View {
     }
 
 
-    int maxOfMaxInVisibleSection = Integer.MIN_VALUE;
+    int maxOfMaxAtVisibleSection = Integer.MIN_VALUE;
     int lastMax = -1;
     float maxOfMaxAnimatedValue = 1;
     ValueAnimator maxValueAnimator;
@@ -294,7 +330,7 @@ public class TelegramChart extends View {
                 path.reset();
             }
 
-            maxOfMaxInVisibleSection = Integer.MIN_VALUE;
+            maxOfMaxAtVisibleSection = Integer.MIN_VALUE;
             for (int i = 0; i < chartData.yDataNormalized.size(); i++) {
                 boolean visible = chartData.visibles[i];
                 if (visible) {
@@ -308,9 +344,9 @@ public class TelegramChart extends View {
                         float y = top + (1 - yn[i1]) * height;
                         float x = left + (float) i1 * width / (yn.length - 1);
 
-                        if (x >= slidingRect.left && x <= slidingRect.right){
-                            if (chartData.yDataOriginal.get(i)[i1] > maxOfMaxInVisibleSection) {
-                                maxOfMaxInVisibleSection = chartData.yDataOriginal.get(i)[i1];
+                        if (x >= slidingRect.left && x <= slidingRect.right) {
+                            if (chartData.yDataOriginal.get(i)[i1] > maxOfMaxAtVisibleSection) {
+                                maxOfMaxAtVisibleSection = chartData.yDataOriginal.get(i)[i1];
                             }
                         }
 
@@ -321,39 +357,30 @@ public class TelegramChart extends View {
             }
 
             if (lastMax == -1) {
-                lastMax = maxOfMaxInVisibleSection;
-                maxOfMaxAnimatedValue = maxOfMaxInVisibleSection;
+                lastMax = maxOfMaxAtVisibleSection;
+                maxOfMaxAnimatedValue = maxOfMaxAtVisibleSection;
             }
 
-            if (lastMax != maxOfMaxInVisibleSection) {
-                maxValueAnimator = ValueAnimator.ofFloat(lastMax, maxOfMaxInVisibleSection);
-                maxValueAnimator.setDuration(125);
-                maxValueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator animation) {
-                        maxOfMaxAnimatedValue = (float) animation.getAnimatedValue();
-                        invalidate();
-                    }
-                });
-                maxValueAnimator.addListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        super.onAnimationEnd(animation);
-                        lastMax = maxOfMaxInVisibleSection;
-                    }
-                });
+            if (lastMax != maxOfMaxAtVisibleSection) {
+                if (maxValueAnimator.isRunning()) {
+                    maxValueAnimator.cancel();
+                }
+                hideInvisible = false;
                 maxValueAnimator.start();
             }
         }
 
 
+        canvas.save();
+        canvas.clipRect(smallForegroundRect, Region.Op.INTERSECT);
         for (int i = 0; i < pathsSmall.length; i++) {
             boolean visible = chartData.visibles[i];
             if (visible) {
                 canvas.drawPath(pathsSmall[i], paintsSmall[i]);
             }
-
         }
+
+        canvas.restore();
 
         //top border
         canvas.drawRect(slidingRect.left,
@@ -380,6 +407,8 @@ public class TelegramChart extends View {
         canvas.restore();
 
     }
+
+    boolean hideInvisible = false;
 
     private void drawLargeSection(Canvas canvas) {
         int paddingBottom = getPaddingBottom();
@@ -438,8 +467,8 @@ public class TelegramChart extends View {
         for (int i = 0; i < chartData.yDataOriginal.size(); i++) {
 
             boolean visible = chartData.visibles[i];
-            if (!visible) {
-                continue;
+            if (!visible && hideInvisible) {
+                // continue;
             }
             Integer[] yn = chartData.yDataOriginal.get(i);
             Path path = paths[i];
@@ -449,8 +478,10 @@ public class TelegramChart extends View {
                 float x = -L + left + i1 * xStep;
                 chartData.labels[i1].x = x;
 
+                float norm = yn[i1] / maxOfMaxAnimatedValue;
+
                 if (i1 == 0) {
-                    float y = top + (1 - yn[i1]/maxOfMaxAnimatedValue) * (height - AndroidUtilities.dp(40));
+                    float y = top + (1 - norm) * (height - AndroidUtilities.dp(40));
                     path.moveTo(x, y);
                 }
 
@@ -462,7 +493,7 @@ public class TelegramChart extends View {
                     break;
                 }
 
-                float y = top + (1 - yn[i1]/maxOfMaxAnimatedValue) * (height - AndroidUtilities.dp(40));
+                float y = top + (1 - norm) * (height - AndroidUtilities.dp(40));
 
                 chartData.xs[i1] = x;
 
@@ -476,9 +507,9 @@ public class TelegramChart extends View {
 
         for (int i = 0; i < paths.length; i++) {
             boolean visible = chartData.visibles[i];
-            if (visible) {
-                canvas.drawPath(paths[i], paints[i]);
-            }
+            //if (visible) {
+            canvas.drawPath(paths[i], paints[i]);
+            //}
         }
 
         //draw xLabels
@@ -668,9 +699,12 @@ public class TelegramChart extends View {
 
     private DragMode dragMode = DragMode.Both;
 
+    int indexToToggle = -1;
+
     public void setActiveChart(int index, boolean isChecked) {
         chartData.visibles[index] = isChecked;
-       invalidate();
+        indexToToggle = index;
+        invalidate();
     }
 
     enum DragMode {
