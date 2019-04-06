@@ -379,7 +379,6 @@ public class TelegramChart extends View {
                 canvas.drawPath(pathsSmall[i], paintsSmall[i]);
             }
         }
-
         canvas.restore();
 
         //top border
