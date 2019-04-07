@@ -26,7 +26,7 @@ import com.hm60.telegramcontestchart.util.Utils;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TelegramChart extends View {
+public class TChart extends View {
 
     public static final int chartColorDark = 0xff1d2733;
     public static final int chartColorLight = 0xffffffff;
@@ -94,19 +94,19 @@ public class TelegramChart extends View {
     private float lastXSlidingRect;
 
 
-    public TelegramChart(Context context) {
+    public TChart(Context context) {
         super(context);
 
         init();
     }
 
-    public TelegramChart(Context context, AttributeSet attrs) {
+    public TChart(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         init();
     }
 
-    public TelegramChart(Context context, AttributeSet attrs, int defStyleAttr) {
+    public TChart(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
         init();
@@ -184,14 +184,6 @@ public class TelegramChart extends View {
 
     }
 
-    public int getBackgroundColor() {
-        return this.color;
-    }
-
-    public void applyTheme(float colorLightFactor) {
-        this.color = ColorUtil.combineColors(chartColorLight, chartColorDark, colorLightFactor);
-        invalidate();
-    }
 
     public void setData(List<Integer[]> yDataList, long[] xData, String[] names, String[] colors, String[] types, String title) {
         chartData.title = title;
@@ -285,7 +277,7 @@ public class TelegramChart extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-
+        
     }
 
     int maxOfMaxAtVisibleSection = Integer.MIN_VALUE;
